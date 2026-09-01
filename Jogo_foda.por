@@ -1,0 +1,175 @@
+programa
+{
+	inclua biblioteca Texto --> txt
+	inclua biblioteca Util --> u
+	
+	cadeia matriz[8][12], direcao = "d", Item = "Nenhum", pos_caixa
+	inteiro y = 4, x = 1, anterior_x = 0, anterior_y = 4, fase = 0, x_chave, y_chave, x_caixa[3], y_caixa[3], aux, caixa_movidax, caixa_moviday, possui_chave[5]
+	logico perdeu = falso, porta_saida = falso, porta_entrada = falso, segurando_caixa = falso
+
+	funcao inicio(){
+  
+		enquanto(nao perdeu){
+			define_caractere()
+			desenha_matriz()
+			movimentacao()
+		}
+	}
+
+	funcao define_caractere(){
+		para(inteiro i = 0; i < 8; i++){
+			para(inteiro j = 0; j < 12; j++){
+				se(j == 11 ou j == 0){
+					matriz[i][j] = "|"
+				}senao se(i == 7 ou i == 0){
+					matriz[i][j] = "—"
+				}senao se(y == i e x == j){
+					matriz[i][j] = "#"
+				}senao se(fase == 0 e i == 1 e j == 7 e possui_chave[fase] == 0){
+					matriz[i][j] = "+"
+					x_chave = j
+					y_chave = i
+				}senao se(fase == 1 e i == 1 e j == 7 e possui_chave[fase] == 0){
+					matriz[i][j] = "+"
+					x_chave = j
+					y_chave = i
+				}senao se(validacao_caixa(j, i)){
+					matriz[i][j] = "□"
+				}senao{
+					matriz[i][j] = "."
+				}
+			}
+		}
+		se((possui_chave[fase] == 1)){
+			matriz[3][11] = "\\"
+			matriz[4][11] = "/"
+			porta_saida = verdadeiro
+		}
+		se((fase > 0)){
+			matriz[3][0] = "\\"
+			matriz[4][0] = "/"
+			porta_entrada = verdadeiro
+		}
+	}
+
+	funcao desenha_matriz(){
+		limpa()
+		escreva("== Colete a chave (+) para passsar de nível ==\n")
+		escreva("          ====  Fase ", fase, "  ====\n\n")
+		para(inteiro i = 0; i < 8; i++){
+			escreva("   ")
+		para(inteiro j = 0; j < 12; j++){
+			escreva(matriz[i][j], "  ")
+		}
+		se(i == 7){
+			escreva("Item selecionado: ", Item)
+		}
+			escreva("\n")
+		}
+	}
+
+	funcao movimentacao(){
+  
+		escreva("Movimentação: ")
+		leia(direcao)
+	  
+		se(direcao == "d"){
+			se(possui_chave[fase] == 1 e (y == 3 ou y == 4) e x == 10){
+				fase++
+				porta_saida = falso
+				possui_chave[fase] = 0
+				x = 1
+				y = 4
+			}senao se(x < 10 e nao validacao_caixa(x + 1, y)){
+				anterior_x = x
+				anterior_y = y
+				x++
+			}
+		}senao se(direcao == "a" e x >= 1){
+			se(porta_entrada e (y == 3 ou y == 4) e x == 1){
+				fase--
+				x = 10
+				y = 4
+				possui_chave[fase] = 0
+				porta_saida = verdadeiro
+			}senao se(x < 10 e nao validacao_caixa(x - 1, y)){
+				anterior_x = x
+				anterior_y = y
+				x--
+			}
+		}senao se(direcao == "w" e y > 1 e nao validacao_caixa(x, y - 1)){
+			anterior_x = x
+			anterior_y = y
+			y--
+		}senao se(direcao == "s" e y < 6 e nao validacao_caixa(x, y + 1)){
+			anterior_x = x
+			anterior_y = y
+			y++
+		}senao se(direcao == "1"){
+			fase = 1
+		}senao se(direcao == " "){
+			segurando_caixa = verdadeiro
+			anterior_x = 1
+			anterior_y = 2
+		}
+		se(x == x_chave e y == y_chave){
+			possui_chave[fase] = 1
+			mover_caixa()
+		}
+	}
+
+	funcao logico validacao_caixa(inteiro x_, inteiro y_){
+		se(fase == 1 ou segurando_caixa){
+			se(segurando_caixa){
+				x_caixa[2] = anterior_x
+				y_caixa[2] = anterior_y
+			}senao{
+				x_caixa[2] = 1
+				y_caixa[2] = 2
+			}
+		}
+		logico eh_caixa = falso
+		para(inteiro i = 0; i < 3; i++){
+			se(x_ == x_caixa[i] e y_ == y_caixa[i]){
+				eh_caixa = verdadeiro
+	    		}
+		}
+		retorne eh_caixa
+	}
+
+	funcao logico caixa_perto(){
+		logico tem_caixa = falso
+			se(validacao_caixa(x, y - 1)){
+				tem_caixa = verdadeiro
+				pos_caixa = "cima"
+			}senao se(validacao_caixa(x, y + 1)){
+				tem_caixa = verdadeiro
+				pos_caixa = "baixo"
+			}senao se(validacao_caixa(x - 1, y)){
+				tem_caixa = verdadeiro
+				pos_caixa = "esquerda"
+			}senao se(validacao_caixa(x + 1, y)){
+				tem_caixa = verdadeiro
+				pos_caixa = "direita"
+			}
+		retorne tem_caixa
+	}
+
+	funcao escreva_lento(cadeia texto, inteiro velocidade){
+		inteiro passar_dialogo
+		inteiro numero_caracteres = txt.numero_caracteres(texto)
+
+		para(inteiro i = 0; i < numero_caracteres; i++){
+			escreva(txt.obter_caracter(texto, i))
+			u.aguarde(u.sorteia(velocidade - 50, velocidade + 50))
+		}
+		escreva("\n\nPressione qualquer tecla: ")
+		leia(passar_dialogo)
+	}
+
+	funcao mover_caixa(){
+		se(caixa_perto()){
+			Item = "caixa"
+		}
+	}
+}
