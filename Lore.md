@@ -1,0 +1,64 @@
+LORE -- TERMINAL QUEST
+
+
+	O jogador acorda no mundo sem memórias de sua origem, encontrando personagens e descobrindo mais da própria história e a do mundo. No início do jogo, o jogador é introduzido ao sistema de experiência, às classes, e às armas, tendo seus atributos iniciais.
+
+
+“Mana”
+
+- RAM, cada habilidade usa um pouco de memória RAM, para recarregar, deve-se pressionar c
+
+
+Sistema de XP:
+
+- Kernel = XP; Ex: Inimigo derrotado, +100 kernel
+- Versão = nível de XP; Ex: Sistema Atualizado! Versão 1.4
+
+
+Sistema de classes
+
+Desenvolvedor
+
+- Estudante de TDS.
+- Dev. Júnior
+- Dev. Sênior
+
+
+Técnico de T.I.
+
+- Técnico
+- Hacker
+
+
+Sistema de vida
+
+- bits = 1 ponto de vida
+- integridade = Saúde
+
+
+Armas
+
+- 1
+- 0
+
+    Suas combinações resultam em diferentes armas.
+
+Habilidades/Chaves
+
+- Chave para salto
+- Chave de acesso para fase += 1
+- Chave de acesso para fase -	= 1
+- Chave para …
+
+
+Ex: Parabéns, você obteve uma chave de salto, use-a pressionando f
+
+
+SISTEMA DE DESCOBERTA DE INFORMAÇÕES
+
+O sistema de descoberta de informações a respeito do mapa ocorrerá com a coleta de HD’s e SSD’s, adquirindo as informações neles contidas.
+
+
+HISTÓRIA DO MUNDO
+
+Este mundo foi corrompido por um Malware no 350º Ciclo de clock, desde já, os npc’s sofrem com sua tirania, capangas deste vírus andam pela rua, causando discord, confusão e desespero, corrompendo o belo mundo da computaria. Seu papel é derrotar o máximo de agentes do vírus, porém, não se preucupe valente guerreiro, caso morras, não será em vão.
