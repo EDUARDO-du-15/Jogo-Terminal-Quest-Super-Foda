@@ -4,15 +4,79 @@ programa
 	inclua biblioteca Util --> u
 	
 	cadeia matriz[8][12], direcao = "d", Item = "Nenhum", pos_caixa
+	cadeia texto_daemon[7] = {
+		
+		"     ░▓▓░    ░▓▓░      ",
+		"     ░▓▓▓▓▓▓▓▓▓▓░      ",
+		"     ░▓▓▓▓▓▓▓▓▓▓░      ",
+		"    ░▓▓▓▓▓▓▓▓▓▓▓▓░     ",
+		"    ░▓▓▓▓▓▓▓▓▓▓▓▓░     ",
+		"      ░▒▓▓▓▓▓▓▒░       ",
+		"        ░▓▓▓▓░         "}
+		
+	cadeia texto_jogador[7] = {
+		
+    "        ▒▒▒▒▒▒▒        ",
+    "      ░▓░░░  ░ ▓░      ",
+    "      █▒░░█  █░ ▓      ",
+    "      ██▒░░░░░░██      ",
+    "       ██▓▓▓▓▓▓█       ",
+    "       ██▓███▓▓█       ",
+    "       ▓███ ▓███       "
+}
 	inteiro y = 4, x = 1, anterior_x = 0, anterior_y = 4, fase = 0, x_chave, y_chave, x_caixa[3], y_caixa[3], aux, caixa_movidax, caixa_moviday, possui_chave[5]
 	logico perdeu = falso, porta_saida = falso, porta_entrada = falso, segurando_caixa = falso
 
 	funcao inicio(){
-  
+		falas("- ... Hummm, o que? Onde estou?", 76, "jogador")
+		falas("- ... Hummm, o que? Onde estou?", 76, "jogador")
+		falas("Não, a pergunta certa é: em qual Versão dele você acordou?", 76, "daemon")
+		
 		enquanto(nao perdeu){
 			define_caractere()
 			desenha_matriz()
 			movimentacao()
+		}
+	}
+
+	funcao falas(cadeia texto, inteiro velocidade, cadeia locutor){
+
+		cadeia texto_exibido[9] = {"", "", "", "", "", "", "", "", ""}, passar_dialogo, retrato[7]
+		inteiro numero_caracteres = txt.numero_caracteres(texto), linha = 2, limite_linha = 40
+
+		para(inteiro i = 0; i < 7; i++){
+			se(locutor == "daemon"){
+				retrato[i] = texto_daemon[i]
+			}senao se(locutor == "jogador"){
+				retrato[i] = texto_jogador[i]
+			}
+			
+		}
+
+		para(inteiro i = 0; i < numero_caracteres; i++){
+
+			caracter c = txt.obter_caracter(texto, i)
+
+			texto_exibido[linha] += c
+
+			escreva("┌───────────────────────┐\n")
+	
+			para(inteiro j = 0; j < 7; j++){
+				
+				escreva("│", retrato[j], "│     ", texto_exibido[j], "\n")
+					
+					se(txt.numero_caracteres(texto_exibido[linha]) >= limite_linha e c == ' '){
+						linha++
+					}
+				}
+			escreva("└───────────────────────┘")
+			se(i == numero_caracteres - 1){
+				escreva("     PRESSIONE ENTER PARA CONTINUAR: ")
+				leia(passar_dialogo)
+			}senao{
+				u.aguarde(u.sorteia(velocidade - 75, velocidade + 10))
+			}
+			limpa()
 		}
 	}
 
