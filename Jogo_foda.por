@@ -3,7 +3,7 @@ programa
 	inclua biblioteca Texto --> txt
 	inclua biblioteca Util --> u
 	
-	cadeia matriz[8][12], direcao = "d", Item = "Nenhum", pos_caixa
+	cadeia matriz[8][12], direcao = "d", Item = "Nenhum", pos_caixa, GLOBAL_opcao
 	cadeia texto_daemon[7] = {
 		
 		"     ░▓▓░    ░▓▓░      ",
@@ -12,31 +12,60 @@ programa
 		"    ░▓▓▓▓▓▓▓▓▓▓▓▓░     ",
 		"    ░▓▓▓▓▓▓▓▓▓▓▓▓░     ",
 		"      ░▒▓▓▓▓▓▓▒░       ",
-		"        ░▓▓▓▓░         "}
-		
+		"        ░▓▓▓▓░         "
+	}
 	cadeia texto_jogador[7] = {
 		
-    "        ▒▒▒▒▒▒▒        ",
-    "      ░▓░░░  ░ ▓░      ",
-    "      █▒░░█  █░ ▓      ",
-    "      ██▒░░░░░░██      ",
-    "       ██▓▓▓▓▓▓█       ",
-    "       ██▓███▓▓█       ",
-    "       ▓███ ▓███       "
-}
+	    "        ▒▒▒▒▒▒▒        ",
+	    "      ░▓░░░  ░ ▓░      ",
+	    "      █▒░░█  █░ ▓      ",
+	    "      ██▒░░░░░░██      ",
+	    "       ██▓▓▓▓▓▓█       ",
+	    "       ██▓███▓▓█       ",
+	    "       ▓███ ▓███       "
+	}
+	cadeia texto_desconhecido[7] = {
+		
+		"       ████████        ",
+		"      ████  ████       ",
+		"          ██████       ",
+		"        ███████        ",
+		"                       ",
+		"         ████          ",
+		"         ████          "
+	}
+                    
 	inteiro y = 4, x = 1, anterior_x = 0, anterior_y = 4, fase = 0, x_chave, y_chave, x_caixa[3], y_caixa[3], aux, caixa_movidax, caixa_moviday, possui_chave[5]
 	logico perdeu = falso, porta_saida = falso, porta_entrada = falso, segurando_caixa = falso
 
+
+
 	funcao inicio(){
-		falas("- ... Hummm, o que? Onde estou?", 76, "jogador")
-		falas("- ... Hummm, o que? Onde estou?", 76, "jogador")
-		falas("Não, a pergunta certa é: em qual Versão dele você acordou?", 76, "daemon")
+
+		terminalQuest()
+		
+		fala_inicial()
+		menu()
 		
 		enquanto(nao perdeu){
 			define_caractere()
 			desenha_matriz()
 			movimentacao()
 		}
+	}
+
+	funcao fala_inicial(){
+		falas("- ... Hummm, o que?^      Onde estou?", 76, "jogador")
+		falas("- Que dor de cabeça^//jogador se levanta^  Mas o quê é isso???^//diz olhando ao horizonte", 76, "jogador")
+		falas("- \"Isso\"? Você fala como se eu fosse uma    coisa^//diz um ser se aproximando ao longe", 76, "desconhecido")
+		falas("- Eu sou um Daemon, um processo abandonado^  sem um PID 1...", 76, "daemon")
+		falas("- Ok, mas o que é este mundo?", 76, "jogador")
+		falas("- Não. A pergunta certa é: em qual Versão dele você acordou?", 76, "daemon")
+		falas("- Nós chamamos esta terra de terminal", 76, "daemon")
+		falas("- Espera, tipo o terminal do computador?", 76, "jogador")
+		falas("- Exatamente", 76, "daemon")
+		falas("- Ok... Mas o que é aquilo?^//diz o jogador olhando ao longe uma gigantesca montanha", 76, "jogador")
+		falas("- Isso você descobrirá em breve...", 76, "daemon")
 	}
 
 	funcao falas(cadeia texto, inteiro velocidade, cadeia locutor){
@@ -49,6 +78,8 @@ programa
 				retrato[i] = texto_daemon[i]
 			}senao se(locutor == "jogador"){
 				retrato[i] = texto_jogador[i]
+			}senao se(locutor == "desconhecido"){
+				retrato[i] = texto_desconhecido[i]
 			}
 			
 		}
@@ -57,22 +88,27 @@ programa
 
 			caracter c = txt.obter_caracter(texto, i)
 
-			texto_exibido[linha] += c
+				se(c != '^'){
+					texto_exibido[linha] += c
+				}
 
 			escreva("┌───────────────────────┐\n")
-	
+			se((txt.numero_caracteres(texto_exibido[linha]) >= limite_linha e c == ' ') ou c == '^'){
+					linha++
+			}
+			
 			para(inteiro j = 0; j < 7; j++){
-				
-				escreva("│", retrato[j], "│     ", texto_exibido[j], "\n")
-					
-					se(txt.numero_caracteres(texto_exibido[linha]) >= limite_linha e c == ' '){
-						linha++
-					}
+				se(c != '^'){
+					escreva("│", retrato[j], "│     ", texto_exibido[j], "\n")
 				}
+			}
 			escreva("└───────────────────────┘")
 			se(i == numero_caracteres - 1){
 				escreva("     PRESSIONE ENTER PARA CONTINUAR: ")
 				leia(passar_dialogo)
+				se(passar_dialogo == "1"){
+					pare
+				}
 			}senao{
 				u.aguarde(u.sorteia(velocidade - 75, velocidade + 10))
 			}
@@ -235,5 +271,62 @@ programa
 		se(caixa_perto()){
 			Item = "caixa"
 		}
+	}
+	
+	funcao terminalQuest(){
+		cadeia passar_dialogo
+		escrevaTerminal()
+			u.aguarde(1000)
+			limpa()
+		escrevaQuest(1)
+			u.aguarde(1000)
+			limpa()
+		escrevaTerminal()
+		escrevaQuest(2)
+		escreva("PRESSIONE ENTER PARA CONTINUAR: ")
+		leia(passar_dialogo)
+		limpa()
+	}
+	
+	funcao menu(){
+		escreva("/===========================================\\ \n")
+		escreva("||                                         ||     OQUE DESEJA FAZER?\n")
+		escreva("||                                         ||\n")
+		escreva("||                                         ||\n")
+		escreva("||                                         ||     > ls;\n")
+		escreva("||   01101101  01100101 01101110 01110101  ||\n")
+		escreva("||    .-.-.-.   .---.   .-..-.   .-..-.    ||     > cat inventory;\n")
+		escreva("||    | | | |   | |-    | .` |   | || |    ||\n")
+		escreva("||    `-'-'-'   `---'   `-'`-'   `----'    ||     > boot;\n")
+		escreva("||                                         ||\n")
+		escreva("||                                         ||     > help;\n")
+		escreva("||                                         ||\n")
+		escreva("||                                         ||     > logout;\n")
+		escreva("\\===========================================/\n")
+
+		escreva("\naluno.lab@PC-16930000:~$: ")
+		leia(GLOBAL_opcao)
+	}
+
+	funcao escrevaTerminal(){
+		escreva("  _________  _______   ________  _____ ______   ___  ________   ________  ___          \n",
+		        " |\\___   ___\\\\  ___ \\ |\\   __  \\|\\   _ \\  _   \\|\\  \\|\\   ___  \\|\\   __  \\|\\  \\         \n",
+		        " \\|___\\  \\_\\ \\   __/|\\ \\  \\|  \\ \\  \\  \\\\__\\\\  \\  \\  \\  \\\\ \\  \\  \\  \\|  \\ \\ \\  \\      \n",
+		        "     \\ \\  \\ \\ \\  \\_|/_\\ \\   _  _\\ \\  \\\\|__| \\  \\  \\  \\  \\\\ \\  \\  \\   __  \\ \\  \\       \n",
+		        "      \\ \\  \\ \\ \\  \\_|\\ \\ \\  \\\\  \\\\ \\  \\    \\ \\  \\  \\  \\  \\\\ \\  \\  \\  \\ \\  \\ \\  \\____  \n",
+		        "       \\ \\__\\ \\ \\_______\\ \\__\\\\ _\\\\ \\__\\    \\ \\__\\ \\__\\ \\__\\\\ \\__\\ \\__\\ \\__\\ \\_______\\ \n",
+		        "        \\|__|  \\|_______|\\|__|\\|__|\\|__|     \\|__|\\|__|\\|__| \\|__|\\|__|\\|__|\\|_______|\n")
+	}
+
+	funcao escrevaQuest(inteiro chamada){
+		se(chamada == 1){escreva("\n\n\n\n\n\n\n")}
+	   escreva(  " ________  ___  ___  _______   ________  _________                                    \n",
+		        "|\\   __  \\|\\  \\|\\  \\|\\  ___ \\ |\\   ____\\|\\___   ___\\                                  \n",
+		        "\\ \\  \\|\\  \\ \\  \\\\  \\ \\   __/|\\ \\  \\___|\\|___ \\  \\_|                                  \n",
+		        " \\ \\  \\\\  \\ \\  \\\\  \\ \\  \\_|/_\\ \\_____  \\   \\ \\   \\                                    \n",
+		        "  \\ \\  \\\\  \\ \\  \\\\  \\ \\  \\_|\\ \\|____|\\  \\   \\ \\   \\                                  \n",
+		        "   \\ \\_____  \\ \\_______\\ \\_______\\____\\_\\  \\   \\ \\__\\                                 \n",
+		        "    \\|___| \\__\\|_______|\\|_______|\\_________\\   \\|__|                                 \n",
+		        "          \\|__|                  \\|_________|                                           ")
 	}
 }
