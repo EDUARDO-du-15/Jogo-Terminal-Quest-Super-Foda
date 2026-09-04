@@ -3,22 +3,48 @@ programa
 	inclua biblioteca Texto --> txt
 	inclua biblioteca Util --> u
 	
-	cadeia matriz[8][12], direcao = "d", Item = "Nenhum", pos_caixa, texto_jogador = ""
+	cadeia matriz[8][12], direcao = "d", Item = "Nenhum", pos_caixa
 	cadeia texto_daemon[7] = {
+		
 		"     ░▓▓░    ░▓▓░      ",
 		"     ░▓▓▓▓▓▓▓▓▓▓░      ",
 		"     ░▓▓▓▓▓▓▓▓▓▓░      ",
 		"    ░▓▓▓▓▓▓▓▓▓▓▓▓░     ",
 		"    ░▓▓▓▓▓▓▓▓▓▓▓▓░     ",
 		"      ░▒▓▓▓▓▓▓▒░       ",
-		"        ░▓▓▓▓░         "}
+		"        ░▓▓▓▓░         "
+	}
+		
+	cadeia texto_jogador[7] = {
+		
+	    "        ▒▒▒▒▒▒▒        ",
+	    "      ░▓░░░  ░ ▓░      ",
+	    "      █▒░░█  █░ ▓      ",
+	    "      ██▒░░░░░░██      ",
+	    "       ██▓▓▓▓▓▓█       ",
+	    "       ██▓███▓▓█       ",
+	    "       ▓███ ▓███       "
+	}
+	cadeia texto_desconhecido[7] = {
+		
+		"       ████████        ",
+		"      ████  ████       ",
+		"          ██████       ",
+		"        ███████        ",
+		"                       ",
+		"         ████          ",
+		"         ████          "
+	}
+                    
 	inteiro y = 4, x = 1, anterior_x = 0, anterior_y = 4, fase = 0, x_chave, y_chave, x_caixa[3], y_caixa[3], aux, caixa_movidax, caixa_moviday, possui_chave[5]
 	logico perdeu = falso, porta_saida = falso, porta_entrada = falso, segurando_caixa = falso
 
+
+
 	funcao inicio(){
-		fala_daemon("Não, a pergunta certa é: em qual Versão dele você acordou?", 76)
-		u.aguarde(50000)
-  
+		
+		fala_inicial()
+		
 		enquanto(nao perdeu){
 			define_caractere()
 			desenha_matriz()
@@ -27,44 +53,61 @@ programa
 	}
 
 	funcao fala_inicial(){
-		escreva("┌───────────────────┐\n")
-		escreva("│      ▒▒▒▒▒▒▒      │\n")
-		escreva("│    ░▓░░░  ░ ▓░    │\n")
-		escreva("│    █▒░░█  █░ ▓    │\n")
-		escreva("│    ██▒░░░░░░██    │\n")
-		escreva("│     ██▓▓▓▓▓▓█     │\n")
-		escreva("│     ██▓███▓▓█     │\n")
-		escreva("│     ▓███ ▓███     │\n")
-		escreva("└───────────────────┘\n")
+		falas("- ... Hummm, o que?^      Onde estou?", 76, "jogador")
+		falas("- Que dor de cabeça^//jogador se levanta^  Mas o quê é isso???^//diz olhando ao horizonte", 76, "jogador")
+		falas("- \"Isso\"? Você fala como se eu fosse uma    coisa^//diz um ser se aproximando ao longe", 76, "desconhecido")
+		falas("- Eu sou um Daemon, um processo abandonado^  sem um PID 1...", 76, "daemon")
+		falas("- Ok, mas o que é este mundo?", 76, "jogador")
+		falas("- Não. A pergunta certa é: em qual Versão dele você acordou?", 76, "daemon")
+		falas("- Nós chamamos esta terra de terminal", 76, "daemon")
+		falas("- Espera, tipo o terminal do computador?", 76, "jogador")
+		falas("- Exatamente", 76, "daemon")
+		falas("- Ok... Mas o que é aquilo?^//diz o jogador olhando ao longe uma gigantesca montanha", 76, "jogador")
+		falas("- Isso você descobrirá em breve...", 76, "daemon")
 	}
 
-	funcao fala_daemon(cadeia texto, inteiro velocidade){
+	funcao falas(cadeia texto, inteiro velocidade, cadeia locutor){
 
-		cadeia texto_exibido[9] = {"", "", "", "", "", "", "", "", ""}
+		cadeia texto_exibido[9] = {"", "", "", "", "", "", "", "", ""}, passar_dialogo, retrato[7]
 		inteiro numero_caracteres = txt.numero_caracteres(texto), linha = 2, limite_linha = 40
+
+		para(inteiro i = 0; i < 7; i++){
+			se(locutor == "daemon"){
+				retrato[i] = texto_daemon[i]
+			}senao se(locutor == "jogador"){
+				retrato[i] = texto_jogador[i]
+			}senao se(locutor == "desconhecido"){
+				retrato[i] = texto_desconhecido[i]
+			}
+			
+		}
 
 		para(inteiro i = 0; i < numero_caracteres; i++){
 
 			caracter c = txt.obter_caracter(texto, i)
 
-			texto_exibido[linha] += c
+				se(c != '^'){
+					texto_exibido[linha] += c
+				}
 
 			escreva("┌───────────────────────┐\n")
-	
-			para(inteiro j = 0; j < 7; j++){
-				
-				escreva("│", texto_daemon[j], "│     ", texto_exibido[j], "\n")
-					
-					se(txt.numero_caracteres(texto_exibido[linha]) >= limite_linha e c == ' '){
-						linha++
-					}
-				}
-				
-			escreva("└───────────────────────┘")
-			u.aguarde(u.sorteia(velocidade - 75, velocidade + 10))
-			se(i != numero_caracteres - 1){
-				limpa()
+			se((txt.numero_caracteres(texto_exibido[linha]) >= limite_linha e c == ' ') ou c == '^'){
+					linha++
 			}
+			
+			para(inteiro j = 0; j < 7; j++){
+				se(c != '^'){
+					escreva("│", retrato[j], "│     ", texto_exibido[j], "\n")
+				}
+			}
+			escreva("└───────────────────────┘")
+			se(i == numero_caracteres - 1){
+				escreva("     PRESSIONE ENTER PARA CONTINUAR: ")
+				leia(passar_dialogo)
+			}senao{
+				u.aguarde(u.sorteia(velocidade - 75, velocidade + 10))
+			}
+			limpa()
 		}
 	}
 
