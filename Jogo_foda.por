@@ -34,7 +34,7 @@ programa
 		"         ████          ",
 		"         ████          "
 	}
-                    
+
 	inteiro y = 4, x = 1, anterior_x = 0, anterior_y = 4, fase = 0, x_chave, y_chave, x_caixa[3], y_caixa[3], aux, caixa_movidax, caixa_moviday, possui_chave[5]
 	logico perdeu = falso, porta_saida = falso, porta_entrada = falso, segurando_caixa = falso
 
@@ -42,18 +42,16 @@ programa
 
 	funcao inicio(){
 
+		inteiro pularDialogo = 1
+		
 		terminalQuest()
 		
+		se(pularDialogo == 2){
 		fala_inicial()
-		menu()
-		
-		enquanto(nao perdeu){
-			define_caractere()
-			desenha_matriz()
-			movimentacao()
 		}
+		
+		menu()
 	}
-
 	funcao fala_inicial(){
 		falas("- ... Hummm, o que?^      Onde estou?", 76, "jogador")
 		falas("- Que dor de cabeça^//jogador se levanta^  Mas o quê é isso???^//diz olhando ao horizonte", 76, "jogador")
@@ -293,11 +291,11 @@ programa
 		escreva("||                                         ||     OQUE DESEJA FAZER?\n")
 		escreva("||                                         ||\n")
 		escreva("||                                         ||\n")
-		escreva("||                                         ||     > ls;\n")
+		escreva("||                                         ||     > boot;\n")
 		escreva("||   01101101  01100101 01101110 01110101  ||\n")
 		escreva("||    .-.-.-.   .---.   .-..-.   .-..-.    ||     > cat inventory;\n")
 		escreva("||    | | | |   | |-    | .` |   | || |    ||\n")
-		escreva("||    `-'-'-'   `---'   `-'`-'   `----'    ||     > boot;\n")
+		escreva("||    `-'-'-'   `---'   `-'`-'   `----'    ||     > ls;\n")
 		escreva("||                                         ||\n")
 		escreva("||                                         ||     > help;\n")
 		escreva("||                                         ||\n")
@@ -306,6 +304,16 @@ programa
 
 		escreva("\naluno.lab@PC-16930000:~$: ")
 		leia(GLOBAL_opcao)
+		
+		se(GLOBAL_opcao == "boot")			{chameJogo()}
+		senao
+		se(GLOBAL_opcao == "cat inventory")	{chameJogo()}
+		senao
+		se(GLOBAL_opcao == "ls")				{chameJogo()}
+		senao
+		se(GLOBAL_opcao == "logout")			{chameJogo()}
+		
+		senao							{ajude()}
 	}
 
 	funcao escrevaTerminal(){
@@ -328,5 +336,28 @@ programa
 		        "   \\ \\_____  \\ \\_______\\ \\_______\\____\\_\\  \\   \\ \\__\\                                 \n",
 		        "    \\|___| \\__\\|_______|\\|_______|\\_________\\   \\|__|                                 \n",
 		        "          \\|__|                  \\|_________|                                           ")
+	}
+	funcao chameJogo(){
+		enquanto(nao perdeu){
+			define_caractere()
+			desenha_matriz()
+			movimentacao()
+		}
+	}
+	funcao ajude(){
+		cadeia c
+		
+		limpa()
+		escreva("Comandos:\n")
+		escreva("\nboot          - Comece a jogar")
+		escreva("\ncat inventory - Olhar inventario")
+		escreva("\nls            - Olhe o ambiente")
+		escreva("\nlogout        - Sair do jogo")
+		escreva("\n\n\nComo Jogar:")
+		escreva("\n\nwasd para movimentação, confirme com ENTER após cada tecla")
+		escreva("\nColete as chaves(+) para abrir as portas e passar de nível.")
+		escreva("\n\nPressione ENTER para continuar.")
+		leia(c)
+		menu()
 	}
 }
