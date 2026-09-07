@@ -360,7 +360,7 @@ programa
 		
 		escreva("\nComandos:\n")
 		escreva("\nboot          - Comece a jogar")
-		escreva("\ncat inventory - Olhar inventario")
+		escreva("\nls -l inv     - Olhar inventario")
 		escreva("\nls            - Olhe o ambiente")
 		escreva("\nlogout        - Sair do jogo")
 		escreva("\n\n\nComo Jogar:")
