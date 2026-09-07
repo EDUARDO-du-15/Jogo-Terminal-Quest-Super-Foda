@@ -3,7 +3,7 @@ programa
 	inclua biblioteca Texto --> txt
 	inclua biblioteca Util --> u
 	
-	cadeia matriz[8][12], direcao = "d", itens[30], pos_caixa, GLOBAL_opcao, inventario[5][6]
+	cadeia matriz[8][12], direcao = "d", itens[30], pos_caixa, GLOBAL_opcao, inventario[5][6], GLOBAL_arquivos_ambiente[7]
 	cadeia texto_daemon[7] = {
 		
 		"     ░▓▓░    ░▓▓░      ",
@@ -36,7 +36,7 @@ programa
 	}
 
 	inteiro y = 4, x = 1, anterior_x = 0, anterior_y = 4, fase = 0, x_chave, y_chave, x_caixa[3], y_caixa[3], aux, caixa_movidax, caixa_moviday, possui_chave[5], n_itens = 0
-	logico perdeu = falso, porta_saida = falso, porta_entrada = falso, segurando_caixa = falso
+	logico parou_por_algum_motivo = falso, porta_saida = falso, porta_entrada = falso, segurando_caixa = falso
 
 
 
@@ -225,6 +225,7 @@ programa
 			anterior_y = 2
 		}senao se(direcao == "^c"){
 			abrir_terminal()
+			parou_por_algum_motivo = verdadeiro
 		}
 		se(x == x_chave e y == y_chave){
 			possui_chave[fase] = 1
@@ -348,7 +349,7 @@ programa
 	}
 	
 	funcao chameJogo(){
-		enquanto(nao perdeu){
+		enquanto(nao parou_por_algum_motivo){
 			define_caractere()
 			desenha_matriz()
 			movimentacao()
@@ -396,7 +397,7 @@ programa
 		senao
 		se(comando == "ls -l inv")		{mostrar_inventario()}
 		senao
-		se(comando == "ls")				{chameJogo()}
+		se(comando == "ls")				{listar_ambiente()}
 		senao 
 		se(comando == "logout"){
 			escreva("\nlogout")
@@ -428,6 +429,58 @@ programa
 	}
 
 	funcao listar_ambiente(){
+
+		inteiro n_arquivos = 0
+		cadeia arquivos_ambiente[7]
+		logico chave_listada = falso
+		logico rocha_listada = falso
+
+		//Verifica se os valores referentes a chave e a rocha já foram atribuidos ao vetor "arquivos_ambiente"
+
+		para(inteiro i = 0; i < 7; i++){
+				se(arquivos_ambiente[i] == "-rw------- daemon root 256B gate_0" + fase + ".key"){
+					chave_listada = verdadeiro
+				}senao se(arquivos_ambiente[i] == "-rw-r--r-- daemon root 4.0K rock.dat"){
+					rocha_listada = verdadeiro
+				}
+			}
+
+		//atribui o valor "gate_0(fase).key" ao vetor "arquivos_ambiente" caso as condições dos comandos "se" sejam verdadeiras
 		
+		se(possui_chave[fase] != 1 e nao chave_listada){
+			para(inteiro i = 0; i < 7; i++){
+				se(arquivos_ambiente[i] == ""){
+					arquivos_ambiente[i] = "-rw------- daemon root 256B gate_0" + fase + ".key"
+					n_arquivos++
+					pare
+				}
+			}
+		}
+
+		//atribui o valor "rock.dat" ao vetor "arquivos_ambiente" caso as condições dos comandos "se" sejam verdadeiras
+		
+		se(fase == 1 e nao rocha_listada){
+			para(inteiro i = 0; i < 7; i++){
+				se(arquivos_ambiente[i] == ""){
+					arquivos_ambiente[i] = "-rw-r--r-- daemon root 4.0K rock.dat"
+					n_arquivos++
+					pare
+				}
+			}
+		}
+
+		para(inteiro i = 0; i < 7; i++){
+			GLOBAL_arquivos_ambiente[i] = arquivos_ambiente[i]
+		}
+
+		//escreve os itens que corresponde a listagem de arquivos no ambiente
+		
+		escreva("\ntotal ", n_arquivos, "\n")
+		para(inteiro i = 0; i < 7; i++){
+			se(arquivos_ambiente[i] != ""){
+				escreva("\n", arquivos_ambiente[i], "\n")
+			}
+		}
+		abrir_terminal()
 	}
 }
