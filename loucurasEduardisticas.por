@@ -3,7 +3,7 @@ programa
 	inclua biblioteca Texto --> txt
 	inclua biblioteca Util --> u
 	
-	cadeia matriz[8][12], direcao = "d", itens[30], pos_caixa, GLOBAL_opcao, inventario[5][6], GLOBAL_arquivos_ambiente[7]
+	cadeia matriz[8][12], direcao = "d", itens[30], pos_caixa, GLOBAL_opcao, GLOBAL_inventario[5][6], GLOBAL_arquivos_ambiente[7]
 	cadeia texto_daemon[7] = {
 		
 		"     ░▓▓░    ░▓▓░      ",
@@ -36,6 +36,7 @@ programa
 	}
 
 	inteiro y = 4, x = 1, anterior_x = 0, anterior_y = 4, fase = 0, x_chave, y_chave, x_caixa[3], y_caixa[3], aux, caixa_movidax, caixa_moviday, possui_chave[5], n_itens = 0
+	real versao = 1.0, kernel = 0.0
 	logico parou_por_algum_motivo = falso, porta_saida = falso, porta_entrada = falso, segurando_caixa = falso
 
 
@@ -45,13 +46,13 @@ programa
 		para(inteiro i = 0; i < 5; i++){
 			para(inteiro j = 0; j < 6; j++){
 				se(i != 0 ou j != 0 e j != 1){
-					inventario[i][j] = "."
+					GLOBAL_inventario[i][j] = "."
 				}senao se(j == 0){
-					inventario[i][j] = "0"
+					GLOBAL_inventario[i][j] = "0"
 					n_itens++
 					itens[(i * 6) + j] = "0"
 				}senao se(j == 1){
-					inventario[i][j] = "1"
+					GLOBAL_inventario[i][j] = "1"
 					n_itens++
 					itens[(i * 6) + j] = "1"
 				}
@@ -60,6 +61,8 @@ programa
 
 		logico pular_dialogo
 		cadeia comandos
+
+		encontrar_agente()
 		pular_dialogo = terminalQuest()
 		
 		se(nao pular_dialogo){
@@ -196,6 +199,7 @@ programa
 				anterior_x = x
 				anterior_y = y
 				x++
+				encontrar_agente()
 			}
 		}senao se(direcao == "a" e x >= 1){
 			se(porta_entrada e (y == 3 ou y == 4) e x == 1){
@@ -208,28 +212,32 @@ programa
 				anterior_x = x
 				anterior_y = y
 				x--
+				encontrar_agente()
 			}
 		}senao se(direcao == "w" e y > 1 e nao validacao_caixa(x, y - 1)){
 			anterior_x = x
 			anterior_y = y
 			y--
+			encontrar_agente()
 		}senao se(direcao == "s" e y < 6 e nao validacao_caixa(x, y + 1)){
 			anterior_x = x
 			anterior_y = y
 			y++
+			encontrar_agente()
 		}senao se(direcao == "1"){
 			fase = 1
 		}senao se(direcao == " "){
 			segurando_caixa = verdadeiro
 			anterior_x = 1
 			anterior_y = 2
+			mover_caixa()
 		}senao se(direcao == "^c"){
 			abrir_terminal()
 			parou_por_algum_motivo = verdadeiro
 		}
-		se(x == x_chave e y == y_chave){
+		se((x == x_chave e y == y_chave) ou direcao == "21"){
 			possui_chave[fase] = 1
-			mover_caixa()
+			adicionar_item("gate_0" + fase + ".key")
 		}
 	}
 
@@ -278,8 +286,6 @@ programa
 			escreva(txt.obter_caracter(texto, i))
 			u.aguarde(u.sorteia(velocidade - 50, velocidade + 50))
 		}
-		escreva("\n\nPressione qualquer tecla: ")
-		leia(passar_dialogo)
 	}
 
 	funcao mover_caixa(){
@@ -355,7 +361,7 @@ programa
 			movimentacao()
 		}
 	}
-	
+
 	funcao ajude(){
 		cadeia c
 		
@@ -378,12 +384,24 @@ programa
 		
 		para(inteiro i = 0; i < 5; i++){
 			para(inteiro j = 0; j < 6; j++){
-				se(inventario[i][j] != "."){
-					escreva("-rwx------ daemon root 1.0K ", inventario[i][j], "\n")
+				se(GLOBAL_inventario[i][j] != "."){
+					escreva("-rw------- daemon root 1.0K ", GLOBAL_inventario[i][j], "\n")
 				}
 			}
 		}
 		abrir_terminal()
+	}
+
+	funcao adicionar_item(cadeia item){
+		para(inteiro i = 0; i < 5; i++){
+			para(inteiro j = 0; j < 6; j++){
+				se(GLOBAL_inventario[i][j] == "."){
+					GLOBAL_inventario[i][j] = item
+					n_itens++
+					retorne
+				}
+			}
+		}
 	}
 
 	funcao abrir_terminal(){
@@ -482,5 +500,86 @@ programa
 			}
 		}
 		abrir_terminal()
+	}
+
+	funcao encontrar_agente(){
+		inteiro escolha_
+		se(u.sorteia(1, 10) < 11){
+			escreva("		")
+			escreva_lento("ENTIDADE DETECTADA\n\n", 100)
+			escreva("\n\n1 - Atacar")
+			escreva(  "\n2 - fugir")
+			leia(escolha_)
+			
+			se(escolha_ == 1){
+				rodar_dado()
+			}senao
+			se(escolha_ == 2 e u.sorteia(1, 10) == 1){
+				chameJogo()
+			}senao{
+				falas("M0vim&ntação^bl0que@da", 160, "daemon")
+				falas("D&STRU@ 0 AG&NTE", 80, "daemon")
+			}
+		}
+	}
+
+	funcao rodar_dado(){
+		inteiro numero_sorteado = u.sorteia(1, 20)
+		cadeia numero_mostrado
+		se(numero_sorteado < 10){
+			numero_mostrado = "0" + numero_sorteado
+		}senao{
+			numero_mostrado = numero_sorteado + ""
+		}
+
+		limpa()
+
+		u.aguarde(500)
+
+		limpa()
+		escreva("O número sorteado é.\n\n┌──────────┐\n")
+		escreva("│          │\n")
+		escreva("│    04    │\n")
+		escreva("│          │\n")
+		escreva("└──────────┘")
+
+		u.aguarde(500)
+
+		limpa()
+		escreva("O número sorteado é..\n\n┌──────────┐\n")
+		escreva("│          │\n")
+		escreva("│    17    │\n")
+		escreva("│          │\n")
+		escreva("└──────────┘")
+
+		u.aguarde(500)
+
+		limpa()
+		escreva("O número sorteado é...\n\n┌──────────┐\n")
+		escreva("│          │\n")
+		escreva("│    09    │\n")
+		escreva("│          │\n")
+		escreva("└──────────┘")
+
+		u.aguarde(500)
+		limpa()
+
+		para(inteiro i = 0; i < 4; i++){
+
+			escreva("O número sorteado é:\n\n┌──────────┐\n")
+			escreva("│          │\n")
+			escreva("│    ", numero_mostrado, "    │\n")
+			escreva("│          │\n")
+			escreva("└──────────┘")
+			u.aguarde(500)
+			limpa()
+			u.aguarde(200)
+		}
+
+		
+	}
+
+	funcao combate(){
+		
 	}
 }
