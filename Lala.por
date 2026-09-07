@@ -59,10 +59,6 @@ programa
 			}
 		}
 
-		encontrar_agente()
-
-		u.aguarde(2000)
-
 		logico pular_dialogo
 		cadeia comandos
 		pular_dialogo = terminalQuest()
@@ -201,6 +197,7 @@ programa
 				anterior_x = x
 				anterior_y = y
 				x++
+				encontrar_agente()
 			}
 		}senao se(direcao == "a" e x >= 1){
 			se(porta_entrada e (y == 3 ou y == 4) e x == 1){
@@ -213,15 +210,18 @@ programa
 				anterior_x = x
 				anterior_y = y
 				x--
+				encontrar_agente()
 			}
 		}senao se(direcao == "w" e y > 1 e nao validacao_caixa(x, y - 1)){
 			anterior_x = x
 			anterior_y = y
 			y--
+			encontrar_agente()
 		}senao se(direcao == "s" e y < 6 e nao validacao_caixa(x, y + 1)){
 			anterior_x = x
 			anterior_y = y
 			y++
+			encontrar_agente()
 		}senao se(direcao == "1"){
 			fase = 1
 		}senao se(direcao == " "){
@@ -501,9 +501,19 @@ programa
 	}
 
 	funcao encontrar_agente(){
-		se(u.sorteia(1, 10) < 11){
+		inteiro combate
+		se(u.sorteia(1, 10) == 1){
 			escreva("		")
 			escreva_lento("ENTIDADE DETECTADA\n\n", 100)
+			escreva("\n\n1 - Atacar")
+			escreva(  "\n2 - fugir")
+			leia(combate)
+			
+			se(combate == 1){
+				
+			}senao
+			se(combate == 2){chameJogo()}
+			senao{escreva("\nbash: command not found\nCurrent directory: /home/operator\nHint: use 'cat readme.txt' to open the menu.\n") abrir_terminal()}
 		}
 	}
 }
