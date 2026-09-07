@@ -3,7 +3,7 @@ programa
 	inclua biblioteca Texto --> txt
 	inclua biblioteca Util --> u
 	
-	cadeia matriz[8][12], direcao = "d", Item = "Nenhum", pos_caixa
+	cadeia matriz[8][12], direcao = "d", itens[30], pos_caixa, GLOBAL_opcao, GLOBAL_inventario[5][6], GLOBAL_arquivos_ambiente[7]
 	cadeia texto_daemon[7] = {
 		
 		"     ░▓▓░    ░▓▓░      ",
@@ -14,7 +14,6 @@ programa
 		"      ░▒▓▓▓▓▓▓▒░       ",
 		"        ░▓▓▓▓░         "
 	}
-		
 	cadeia texto_jogador[7] = {
 		
 	    "        ▒▒▒▒▒▒▒        ",
@@ -35,23 +34,41 @@ programa
 		"         ████          ",
 		"         ████          "
 	}
-                    
-	inteiro y = 4, x = 1, anterior_x = 0, anterior_y = 4, fase = 0, x_chave, y_chave, x_caixa[3], y_caixa[3], aux, caixa_movidax, caixa_moviday, possui_chave[5]
-	logico perdeu = falso, porta_saida = falso, porta_entrada = falso, segurando_caixa = falso
+
+	inteiro y = 4, x = 1, anterior_x = 0, anterior_y = 4, fase = 0, x_chave, y_chave, x_caixa[3], y_caixa[3], aux, caixa_movidax, caixa_moviday, possui_chave[5], n_itens = 0
+	logico parou_por_algum_motivo = falso, porta_saida = falso, porta_entrada = falso, segurando_caixa = falso
 
 
 
 	funcao inicio(){
-		
-		fala_inicial()
-		
-		enquanto(nao perdeu){
-			define_caractere()
-			desenha_matriz()
-			movimentacao()
-		}
-	}
 
+		para(inteiro i = 0; i < 5; i++){
+			para(inteiro j = 0; j < 6; j++){
+				se(i != 0 ou j != 0 e j != 1){
+					GLOBAL_inventario[i][j] = "."
+				}senao se(j == 0){
+					GLOBAL_inventario[i][j] = "0"
+					n_itens++
+					itens[(i * 6) + j] = "0"
+				}senao se(j == 1){
+					GLOBAL_inventario[i][j] = "1"
+					n_itens++
+					itens[(i * 6) + j] = "1"
+				}
+			}
+		}
+
+		logico pular_dialogo
+		cadeia comandos
+		pular_dialogo = terminalQuest()
+		
+		se(nao pular_dialogo){
+			fala_inicial()
+		}
+
+		abrir_terminal()
+	}
+	
 	funcao fala_inicial(){
 		falas("- ... Hummm, o que?^      Onde estou?", 76, "jogador")
 		falas("- Que dor de cabeça^//jogador se levanta^  Mas o quê é isso???^//diz olhando ao horizonte", 76, "jogador")
@@ -104,6 +121,9 @@ programa
 			se(i == numero_caracteres - 1){
 				escreva("     PRESSIONE ENTER PARA CONTINUAR: ")
 				leia(passar_dialogo)
+				se(passar_dialogo == "1"){
+					pare
+				}
 			}senao{
 				u.aguarde(u.sorteia(velocidade - 75, velocidade + 10))
 			}
@@ -156,9 +176,6 @@ programa
 		para(inteiro j = 0; j < 12; j++){
 			escreva(matriz[i][j], "  ")
 		}
-		se(i == 7){
-			escreva("Item selecionado: ", Item)
-		}
 			escreva("\n")
 		}
 	}
@@ -206,10 +223,14 @@ programa
 			segurando_caixa = verdadeiro
 			anterior_x = 1
 			anterior_y = 2
-		}
-		se(x == x_chave e y == y_chave){
-			possui_chave[fase] = 1
 			mover_caixa()
+		}senao se(direcao == "^c"){
+			abrir_terminal()
+			parou_por_algum_motivo = verdadeiro
+		}
+		se((x == x_chave e y == y_chave) ou direcao == "21"){
+			possui_chave[fase] = 1
+			adicionar_item("gate_0" + fase + ".key")
 		}
 	}
 
@@ -263,8 +284,216 @@ programa
 	}
 
 	funcao mover_caixa(){
-		se(caixa_perto()){
-			Item = "caixa"
+		caixa_perto()
+	}
+	
+	funcao logico terminalQuest(){
+
+		logico pular_dialogo = falso
+		cadeia continuar
+		
+		escrevaTerminal()
+			u.aguarde(1000)
+			limpa()
+		escrevaQuest(1)
+			u.aguarde(1000)
+			limpa()
+		escrevaTerminal()
+		escrevaQuest(2)
+		escreva("PRESSIONE ENTER PARA CONTINUAR: ")
+		leia(continuar)
+		se(continuar == "1"){pular_dialogo = verdadeiro}
+		limpa()
+
+		retorne pular_dialogo
+	}
+	
+	funcao menu(){
+		escreva("\n/===========================================\\ \n")
+		escreva("||                                         ||     COMANDOS SUPORTADOS:\n")
+		escreva("||                                         ||\n")
+		escreva("||                                         ||\n")
+		escreva("||                                         ||     > boot;\n")
+		escreva("||   01101101  01100101 01101110 01110101  ||\n")
+		escreva("||    .-.-.-.   .---.   .-..-.   .-..-.    ||     > ls -l inv;\n")
+		escreva("||    | | | |   | |-    | .` |   | || |    ||\n")
+		escreva("||    `-'-'-'   `---'   `-'`-'   `----'    ||     > ls;\n")
+		escreva("||                                         ||\n")
+		escreva("||                                         ||     > help;\n")
+		escreva("||                                         ||\n")
+		escreva("||                                         ||     > logout;\n")
+		escreva("\\===========================================/\n")
+
+		abrir_terminal()
+	}
+
+	funcao escrevaTerminal(){
+		escreva("  _________  _______   ________  _____ ______   ___  ________   ________  ___          \n",
+		        " |\\___   ___\\\\  ___ \\ |\\   __  \\|\\   _ \\  _   \\|\\  \\|\\   ___  \\|\\   __  \\|\\  \\         \n",
+		        " \\|___\\  \\_\\ \\   __/|\\ \\  \\|  \\ \\  \\  \\\\__\\\\  \\  \\  \\  \\\\ \\  \\  \\  \\|  \\ \\ \\  \\      \n",
+		        "     \\ \\  \\ \\ \\  \\_|/_\\ \\   _  _\\ \\  \\\\|__| \\  \\  \\  \\  \\\\ \\  \\  \\   __  \\ \\  \\       \n",
+		        "      \\ \\  \\ \\ \\  \\_|\\ \\ \\  \\\\  \\\\ \\  \\    \\ \\  \\  \\  \\  \\\\ \\  \\  \\  \\ \\  \\ \\  \\____  \n",
+		        "       \\ \\__\\ \\ \\_______\\ \\__\\\\ _\\\\ \\__\\    \\ \\__\\ \\__\\ \\__\\\\ \\__\\ \\__\\ \\__\\ \\_______\\ \n",
+		        "        \\|__|  \\|_______|\\|__|\\|__|\\|__|     \\|__|\\|__|\\|__| \\|__|\\|__|\\|__|\\|_______|\n")
+	}
+
+	funcao escrevaQuest(inteiro chamada){
+		se(chamada == 1){escreva("\n\n\n\n\n\n\n")}
+	   escreva(  " ________  ___  ___  _______   ________  _________                                    \n",
+		        "|\\   __  \\|\\  \\|\\  \\|\\  ___ \\ |\\   ____\\|\\___   ___\\                                  \n",
+		        "\\ \\  \\|\\  \\ \\  \\\\  \\ \\   __/|\\ \\  \\___|\\|___ \\  \\_|                                  \n",
+		        " \\ \\  \\\\  \\ \\  \\\\  \\ \\  \\_|/_\\ \\_____  \\   \\ \\   \\                                    \n",
+		        "  \\ \\  \\\\  \\ \\  \\\\  \\ \\  \\_|\\ \\|____|\\  \\   \\ \\   \\                                  \n",
+		        "   \\ \\_____  \\ \\_______\\ \\_______\\____\\_\\  \\   \\ \\__\\                                 \n",
+		        "    \\|___| \\__\\|_______|\\|_______|\\_________\\   \\|__|                                 \n",
+		        "          \\|__|                  \\|_________|                                           ")
+	}
+	
+	funcao chameJogo(){
+		enquanto(nao parou_por_algum_motivo){
+			define_caractere()
+			desenha_matriz()
+			movimentacao()
 		}
+	}
+	
+	funcao ajude(){
+		cadeia c
+		
+		escreva("\nComandos:\n")
+		escreva("\nboot          - Comece a jogar")
+		escreva("\ncat inventory - Olhar inventario")
+		escreva("\nls            - Olhe o ambiente")
+		escreva("\nlogout        - Sair do jogo")
+		escreva("\n\n\nComo Jogar:")
+		escreva("\n\nwasd para movimentação, confirme com ENTER após cada tecla")
+		escreva("\nColete as chaves(+) para abrir as portas e passar de nível.\n")
+		abrir_terminal()
+	}
+
+	funcao mostrar_inventario(){
+
+		cadeia sair
+		
+		escreva("\ntotal ", n_itens, "\n\n")
+		
+		para(inteiro i = 0; i < 5; i++){
+			para(inteiro j = 0; j < 6; j++){
+				se(GLOBAL_inventario[i][j] != "."){
+					escreva("-rw------- daemon root 1.0K ", GLOBAL_inventario[i][j], "\n")
+				}
+			}
+		}
+		abrir_terminal()
+	}
+
+	funcao adicionar_item(cadeia item){
+		para(inteiro i = 0; i < 5; i++){
+			para(inteiro j = 0; j < 6; j++){
+				se(GLOBAL_inventario[i][j] == "."){
+					GLOBAL_inventario[i][j] = item
+					n_itens++
+					retorne
+				}
+			}
+		}
+	}
+
+	funcao abrir_terminal(){
+		
+		cadeia comando
+		
+		escreva("\noperator@kernel:~$: ")
+		leia(comando)
+		
+		se(comando == "boot")			{chameJogo()}
+		senao
+		se(comando == "ls -l inv")		{mostrar_inventario()}
+		senao
+		se(comando == "ls")				{listar_ambiente()}
+		senao 
+		se(comando == "logout"){
+			escreva("\nlogout")
+			u.aguarde(200)
+			limpa()
+			escreva("\noperator@kernel:~$: logout\n\nlogout.")
+			u.aguarde(200)
+			limpa()
+			escreva("\noperator@kernel:~$: logout\n\nlogout..")
+			u.aguarde(200)
+			limpa()
+			escreva("\noperator@kernel:~$: logout\n\nlogout...")
+			u.aguarde(200)
+			limpa()
+			escreva("\noperator@kernel:~$: logout\n\nlogout")
+			u.aguarde(200)
+			limpa()
+			escreva("\noperator@kernel:~$: logout\n\nlogout\n\nNo active world found outside this session.\n")
+			abrir_terminal()
+			
+		}
+		senao
+		se(comando == "help")			{ajude()}
+		senao
+		se(comando == "cat readme.txt")	{menu()}
+		senao
+		se(comando == "clear")			{limpa() abrir_terminal()}
+		senao{						escreva("\nbash: command not found\nCurrent directory: /home/operator\nHint: use 'cat readme.txt' to open the menu.\n") abrir_terminal()}
+	}
+
+	funcao listar_ambiente(){
+
+		inteiro n_arquivos = 0
+		cadeia arquivos_ambiente[7]
+		logico chave_listada = falso
+		logico rocha_listada = falso
+
+		//Verifica se os valores referentes a chave e a rocha já foram atribuidos ao vetor "arquivos_ambiente"
+
+		para(inteiro i = 0; i < 7; i++){
+				se(arquivos_ambiente[i] == "-rw------- daemon root 256B gate_0" + fase + ".key"){
+					chave_listada = verdadeiro
+				}senao se(arquivos_ambiente[i] == "-rw-r--r-- daemon root 4.0K rock.dat"){
+					rocha_listada = verdadeiro
+				}
+			}
+
+		//atribui o valor "gate_0(fase).key" ao vetor "arquivos_ambiente" caso as condições dos comandos "se" sejam verdadeiras
+		
+		se(possui_chave[fase] != 1 e nao chave_listada){
+			para(inteiro i = 0; i < 7; i++){
+				se(arquivos_ambiente[i] == ""){
+					arquivos_ambiente[i] = "-rw------- daemon root 256B gate_0" + fase + ".key"
+					n_arquivos++
+					pare
+				}
+			}
+		}
+
+		//atribui o valor "rock.dat" ao vetor "arquivos_ambiente" caso as condições dos comandos "se" sejam verdadeiras
+		
+		se(fase == 1 e nao rocha_listada){
+			para(inteiro i = 0; i < 7; i++){
+				se(arquivos_ambiente[i] == ""){
+					arquivos_ambiente[i] = "-rw-r--r-- daemon root 4.0K rock.dat"
+					n_arquivos++
+					pare
+				}
+			}
+		}
+
+		para(inteiro i = 0; i < 7; i++){
+			GLOBAL_arquivos_ambiente[i] = arquivos_ambiente[i]
+		}
+
+		//escreve os itens que corresponde a listagem de arquivos no ambiente
+		
+		escreva("\ntotal ", n_arquivos, "\n")
+		para(inteiro i = 0; i < 7; i++){
+			se(arquivos_ambiente[i] != ""){
+				escreva("\n", arquivos_ambiente[i], "\n")
+			}
+		}
+		abrir_terminal()
 	}
 }
