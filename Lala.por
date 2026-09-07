@@ -36,6 +36,7 @@ programa
 	}
 
 	inteiro y = 4, x = 1, anterior_x = 0, anterior_y = 4, fase = 0, x_chave, y_chave, x_caixa[3], y_caixa[3], aux, caixa_movidax, caixa_moviday, possui_chave[5], n_itens = 0
+	real versao = 1.0, kernel = 0.0
 	logico parou_por_algum_motivo = falso, porta_saida = falso, porta_entrada = falso, segurando_caixa = falso
 
 
@@ -57,6 +58,10 @@ programa
 				}
 			}
 		}
+
+		encontrar_agente()
+
+		u.aguarde(2000)
 
 		logico pular_dialogo
 		cadeia comandos
@@ -279,8 +284,6 @@ programa
 			escreva(txt.obter_caracter(texto, i))
 			u.aguarde(u.sorteia(velocidade - 50, velocidade + 50))
 		}
-		escreva("\n\nPressione qualquer tecla: ")
-		leia(passar_dialogo)
 	}
 
 	funcao mover_caixa(){
@@ -356,7 +359,7 @@ programa
 			movimentacao()
 		}
 	}
-	
+
 	funcao ajude(){
 		cadeia c
 		
@@ -495,5 +498,12 @@ programa
 			}
 		}
 		abrir_terminal()
+	}
+
+	funcao encontrar_agente(){
+		se(u.sorteia(1, 10) < 11){
+			escreva("		")
+			escreva_lento("ENTIDADE DETECTADA\n\n", 100)
+		}
 	}
 }
