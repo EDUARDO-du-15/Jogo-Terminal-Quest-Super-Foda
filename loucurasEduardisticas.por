@@ -223,8 +223,8 @@ programa
 			segurando_caixa = verdadeiro
 			anterior_x = 1
 			anterior_y = 2
-		}senao se(direcao == "cntrl c"){
-			menu()
+		}senao se(direcao == "^c"){
+			abrir_terminal()
 		}
 		se(x == x_chave e y == y_chave){
 			possui_chave[fase] = 1
@@ -308,7 +308,7 @@ programa
 	
 	funcao menu(){
 		escreva("\n/===========================================\\ \n")
-		escreva("||                                         ||     OQUE DESEJA FAZER?\n")
+		escreva("||                                         ||     COMANDOS SUPORTADOS:\n")
 		escreva("||                                         ||\n")
 		escreva("||                                         ||\n")
 		escreva("||                                         ||     > boot;\n")
@@ -372,10 +372,8 @@ programa
 	funcao mostrar_inventario(){
 
 		cadeia sair
-
-		limpa()
-		escreva("operator@kernel:~$: ls -l inv\n\n")
-		escreva("total ", n_itens, "\n\n")
+		
+		escreva("\ntotal ", n_itens, "\n\n")
 		
 		para(inteiro i = 0; i < 5; i++){
 			para(inteiro j = 0; j < 6; j++){
@@ -384,16 +382,7 @@ programa
 				}
 			}
 		}
-		escreva("operator@kernel:~/inventory$:_")
-		leia(sair)
-
-		se(sair != "cd .."){
-			escreva("\nbash: command not found\nCurrent directory: /home/operator/inventory\nHint: use 'cd ..' to return.")
-			u.aguarde(7000)
-			mostrar_inventario()
-		}senao{
-			menu()
-		}
+		abrir_terminal()
 	}
 
 	funcao abrir_terminal(){
@@ -405,7 +394,7 @@ programa
 		
 		se(comando == "boot")			{chameJogo()}
 		senao
-		se(comando == "ls -l inv")		{mostrar_inventario() menu()}
+		se(comando == "ls -l inv")		{mostrar_inventario()}
 		senao
 		se(comando == "ls")				{chameJogo()}
 		senao 
@@ -414,6 +403,8 @@ programa
 		se(comando == "help")			{ajude()}
 		senao
 		se(comando == "cat readme.txt")	{menu()}
-		senao{						escreva("\nbash: command not found\nCurrent directory: /home/operator/inventory\nHint: use 'cat readme.txt' to open the menu.") abrir_terminal()}
+		senao
+		se(comando == "clear")			{limpa() abrir_terminal()}
+		senao{						escreva("\nbash: command not found\nCurrent directory: /home/operator\nHint: use 'cat readme.txt' to open the menu.\n") abrir_terminal()}
 	}
 }
