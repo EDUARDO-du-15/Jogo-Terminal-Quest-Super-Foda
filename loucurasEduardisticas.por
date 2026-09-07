@@ -360,7 +360,7 @@ programa
 		
 		escreva("\nComandos:\n")
 		escreva("\nboot          - Comece a jogar")
-		escreva("\nls -l inv     - Olhar inventario")
+		escreva("\ncat inventory - Olhar inventario")
 		escreva("\nls            - Olhe o ambiente")
 		escreva("\nlogout        - Sair do jogo")
 		escreva("\n\n\nComo Jogar:")
@@ -398,7 +398,26 @@ programa
 		senao
 		se(comando == "ls")				{chameJogo()}
 		senao 
-		se(comando == "logout")			{chameJogo()}
+		se(comando == "logout"){
+			escreva("\nlogout")
+			u.aguarde(200)
+			limpa()
+			escreva("\noperator@kernel:~$: logout\n\nlogout.")
+			u.aguarde(200)
+			limpa()
+			escreva("\noperator@kernel:~$: logout\n\nlogout..")
+			u.aguarde(200)
+			limpa()
+			escreva("\noperator@kernel:~$: logout\n\nlogout...")
+			u.aguarde(200)
+			limpa()
+			escreva("\noperator@kernel:~$: logout\n\nlogout")
+			u.aguarde(200)
+			limpa()
+			escreva("\noperator@kernel:~$: logout\n\nlogout\n\nNo active world found outside this session.\n")
+			abrir_terminal()
+			
+		}
 		senao
 		se(comando == "help")			{ajude()}
 		senao
@@ -406,5 +425,9 @@ programa
 		senao
 		se(comando == "clear")			{limpa() abrir_terminal()}
 		senao{						escreva("\nbash: command not found\nCurrent directory: /home/operator\nHint: use 'cat readme.txt' to open the menu.\n") abrir_terminal()}
+	}
+
+	funcao listar_ambiente(){
+		
 	}
 }
