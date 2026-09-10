@@ -225,7 +225,7 @@ programa
 			anterior_x = x
 			anterior_y = y
 			y++
-			encontrar_agente()
+			combate()
 		}senao se(direcao == "1"){
 			fase = 1
 		}senao se(direcao == " "){
@@ -503,32 +503,10 @@ programa
 		}
 		abrir_terminal()
 	}
-
-	funcao encontrar_agente(){
-		inteiro escolha_
-		se(u.sorteia(1, 10) == 1){
-			limpa()
-			escreva("======")
-			escreva_lento("ENTIDADE DETECTADA======\n\n", 100)
-			escreva("\n\noption 1: Atacar")
-			u.aguarde(200)
-			escreva(  "\noption 2: fugir\n")
-			escreva("\noperator@kernel:~$: ")
-			leia(escolha_)
-			
-			se(escolha_ == 1){
-				rodar_dado()
-			}senao
-			se(escolha_ == 2 e u.sorteia(1, 10) == 1){
-				chameJogo()
-			}senao{
-				falas("M0vim&ntação^bl0que@da", 160, "daemon")
-				falas("D&STRU@ 0 AG&NTE", 80, "daemon")
-			}
 		}
 	}
 
-	funcao rodar_dado(){
+	funcao inteiro rodar_dado(){
 		inteiro numero_sorteado = u.sorteia(1, 20)
 		cadeia numero_mostrado
 		se(numero_sorteado < 10){
@@ -581,12 +559,13 @@ programa
 			u.aguarde(200)
 		}
 
-		
+		retorne numero_sorteado
 	}
 
 	funcao combate(){
 		cadeia escolha_
-
+		
+          inteiro valorDado = rodar_dado()
 		u.aguarde(u.sorteia(300, 700))
 		
 		escreva("┌─────────────────────────────────────────────────────────────┐\n")
@@ -625,7 +604,7 @@ programa
 		
 		escreva("┌─ COMMANDS ──────────────────────────────────────────────────┐\n")
 		escreva("│ attack    weapon    daemon                                  │\n")
-		escreva("│ inventory scan      escape                                  │\n")
+		escreva("│     scan      escape                                  │\n")
 		escreva("└─────────────────────────────────────────────────────────────┘\n\n")
 		
 		escreva("> ") leia(escolha_)
