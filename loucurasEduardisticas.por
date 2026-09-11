@@ -3,7 +3,7 @@ programa
 	inclua biblioteca Texto --> txt
 	inclua biblioteca Util --> u
 	
-	cadeia matriz[8][12], direcao = "d", itens[30], pos_caixa, GLOBAL_opcao, GLOBAL_inventario[5][6], GLOBAL_arquivos_ambiente[7]
+	cadeia matriz[8][12], direcao = "d", itens[30], pos_caixa, GLOBAL_opcao, GLOBAL_inventario[5][6], GLOBAL_arquivos_ambiente[7], arma
 	cadeia texto_daemon[7] = {
 		
 		"     ░▓▓░    ░▓▓░      ",
@@ -35,7 +35,11 @@ programa
 		"         ████          "
 	}
 
-	inteiro y = 4, x = 1, anterior_x = 0, anterior_y = 4, fase = 0, x_chave, y_chave, x_caixa[3], y_caixa[3], aux, caixa_movidax, caixa_moviday, possui_chave[5], n_itens = 0
+	inteiro y = 4, x = 1, anterior_x = 0, anterior_y = 4, fase = 0, integridade = 100, bits = integridade
+	inteiro x_chave, y_chave, possui_chave[5], n_itens = 0
+	inteiro x_caixa[3], y_caixa[3], caixa_moviday, caixa_movidax
+	const inteiro integridade_inimigo = 100
+	inteiro bits_inimigo = integridade_inimigo
 	real versao = 1.0, kernel = 0.0
 	logico parou_por_algum_motivo = falso, porta_saida = falso, porta_entrada = falso, segurando_caixa = falso
 
@@ -62,7 +66,6 @@ programa
 		logico pular_dialogo
 		cadeia comandos
 
-		encontrar_agente()
 		pular_dialogo = terminalQuest()
 		
 		se(nao pular_dialogo){
@@ -172,8 +175,7 @@ programa
 
 	funcao desenha_matriz(){
 		limpa()
-		escreva("== Colete a chave (+) para passsar de nível ==\n")
-		escreva("          ====  Fase ", fase, "  ====\n\n")
+		escreva("operator@kernel:/world/sector_0", fase, "$ cat map.txt\n\nsector_0", fase, ".map  [kernel ", versao, "]\n\n")
 		para(inteiro i = 0; i < 8; i++){
 			escreva("   ")
 		para(inteiro j = 0; j < 12; j++){
@@ -185,7 +187,7 @@ programa
 
 	funcao movimentacao(){
   
-		escreva("Movimentação: ")
+		escreva("\ncwd: /world/sector_0", fase, "\npos: (", x, ",", y, ")\ninput: ")
 		leia(direcao)
 	  
 		se(direcao == "d"){
@@ -199,7 +201,6 @@ programa
 				anterior_x = x
 				anterior_y = y
 				x++
-				encontrar_agente()
 			}
 		}senao se(direcao == "a" e x >= 1){
 			se(porta_entrada e (y == 3 ou y == 4) e x == 1){
@@ -212,18 +213,15 @@ programa
 				anterior_x = x
 				anterior_y = y
 				x--
-				encontrar_agente()
 			}
 		}senao se(direcao == "w" e y > 1 e nao validacao_caixa(x, y - 1)){
 			anterior_x = x
 			anterior_y = y
 			y--
-			encontrar_agente()
 		}senao se(direcao == "s" e y < 6 e nao validacao_caixa(x, y + 1)){
 			anterior_x = x
 			anterior_y = y
 			y++
-			encontrar_agente()
 		}senao se(direcao == "1"){
 			fase = 1
 		}senao se(direcao == " "){
@@ -411,7 +409,7 @@ programa
 		escreva("\noperator@kernel:~$: ")
 		leia(comando)
 		
-		se(comando == "boot")			{chameJogo()}
+		se(comando == "cat map.txt")			{chameJogo()}
 		senao
 		se(comando == "ls -l inv")		{mostrar_inventario()}
 		senao
@@ -502,28 +500,7 @@ programa
 		abrir_terminal()
 	}
 
-	funcao encontrar_agente(){
-		inteiro escolha_
-		se(u.sorteia(1, 10) < 11){
-			escreva("		")
-			escreva_lento("ENTIDADE DETECTADA\n\n", 100)
-			escreva("\n\n1 - Atacar")
-			escreva(  "\n2 - fugir")
-			leia(escolha_)
-			
-			se(escolha_ == 1){
-				rodar_dado()
-			}senao
-			se(escolha_ == 2 e u.sorteia(1, 10) == 1){
-				chameJogo()
-			}senao{
-				falas("M0vim&ntação^bl0que@da", 160, "daemon")
-				falas("D&STRU@ 0 AG&NTE", 80, "daemon")
-			}
-		}
-	}
-
-	funcao rodar_dado(){
+	funcao inteiro rodar_dado(){
 		inteiro numero_sorteado = u.sorteia(1, 20)
 		cadeia numero_mostrado
 		se(numero_sorteado < 10){
@@ -576,10 +553,72 @@ programa
 			u.aguarde(200)
 		}
 
-		
+		retorne numero_sorteado
 	}
 
 	funcao combate(){
+					
+		cadeia escolha_
 		
+          inteiro valorDado = rodar_dado()
+		u.aguarde(u.sorteia(300, 700))
+		
+		escreva("┌─────────────────────────────────────────────────────────────┐\n")
+		escreva("│ Terminal Quest — Combat Session                             │\n")
+		escreva("├─────────────────────────────────────────────────────────────┤\n")
+		escreva("│ TARGET : daemon_corrompido                                  │\n")
+		escreva("│ PID    : 0347                                               │\n")
+		escreva("│ STATUS : HOSTIL                                             │\n")
+		escreva("└─────────────────────────────────────────────────────────────┘\n\n")
+
+		u.aguarde(u.sorteia(300, 700))
+		
+		escreva("┌─ USER STATUS ───────────────────────────────────────────────┐\n")
+		escreva("│ INTEGRIDADE   [")
+
+		para(inteiro i = 0; i < (integridade / bits) * 10; i++){
+			escreva("█")
+		}
+		para(inteiro i = 0; i < 5 - (integridade / bits) * 10; i++){
+			escreva("░")
+		}
+		
+		escreva("]  ", bits, "/", integridade, " BITS                    │\n")
+		escreva("│ KERNEL V.", versao,  "                                                │\n")
+		escreva("│ WEAPON: 0 & 1                                               │\n")
+		escreva("└─────────────────────────────────────────────────────────────┘\n\n")
+
+		u.aguarde(u.sorteia(300, 700))
+		
+		escreva("┌─ ENEMY STATUS ──────────────────────────────────────────────┐\n")
+		escreva("│ HP   [")
+
+		para(inteiro i = 0; i < (integridade_inimigo / bits_inimigo) * 10; i++){
+			escreva("█")
+		}
+		para(inteiro i = 0; i < 5 - (integridade_inimigo / bits_inimigo) * 10; i++){
+			escreva("░")
+		}
+
+		cadeia integridade_inimigo_texto = integridade_inimigo + ""
+		cadeia bits_inimigo_texto = bits_inimigo + ""
+		inteiro n_espacos = 6 - txt.numero_caracteres(integridade_inimigo_texto) + txt.numero_caracteres(bits_inimigo_texto)
+
+		escreva("]  ", integridade_inimigo, "/", bits_inimigo, "                            ")
+		para(inteiro i=0; i < n_espacos; i++){
+			escreva(" ")
+		}
+		escreva("│\n")
+		escreva("│ BUFFER: instável                                            │\n")
+		escreva("└─────────────────────────────────────────────────────────────┘\n\n")
+
+		u.aguarde(u.sorteia(300, 700))
+		
+		escreva("┌─ COMMANDS ──────────────────────────────────────────────────┐\n")
+		escreva("│ attack    weapon    daemon                                  │\n")
+		escreva("│      scan      escape                                       │\n")
+		escreva("└─────────────────────────────────────────────────────────────┘\n\n")
+		
+		escreva("> ") leia(escolha_)
 	}
 }
