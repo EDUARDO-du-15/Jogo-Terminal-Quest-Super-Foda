@@ -4,6 +4,8 @@ programa
 	inclua biblioteca Util --> u
 	
 	cadeia matriz[8][12], direcao = "d", itens[30], pos_caixa, GLOBAL_opcao, GLOBAL_inventario[5][6], GLOBAL_arquivos_ambiente[7], arma
+	cadeia habilidade_inimigo
+	inteiro integridade_inimigo = 100, bits_inimigo = integridade_inimigo, dano_inimigo, valor_kernels
 	cadeia texto_daemon[7] = {
 		
 		"     ░▓▓░    ░▓▓░      ",
@@ -38,8 +40,6 @@ programa
 	inteiro y = 4, x = 1, anterior_x = 0, anterior_y = 4, fase = 0, integridade = 100, bits = integridade
 	inteiro x_chave, y_chave, possui_chave[5], n_itens = 0
 	inteiro x_caixa[3], y_caixa[3], caixa_moviday, caixa_movidax
-	const inteiro integridade_inimigo = 100
-	inteiro bits_inimigo = integridade_inimigo
 	real versao = 1.0, kernel = 0.0
 	logico parou_por_algum_motivo = falso, porta_saida = falso, porta_entrada = falso, segurando_caixa = falso
 
@@ -201,7 +201,7 @@ programa
 				anterior_x = x
 				anterior_y = y
 				x++
-				encontrar_agente()
+				combate()
 			}
 		}senao se(direcao == "a" e x >= 1){
 			se(porta_entrada e (y == 3 ou y == 4) e x == 1){
@@ -214,13 +214,13 @@ programa
 				anterior_x = x
 				anterior_y = y
 				x--
-				encontrar_agente()
+				combate()
 			}
 		}senao se(direcao == "w" e y > 1 e nao validacao_caixa(x, y - 1)){
 			anterior_x = x
 			anterior_y = y
 			y--
-			encontrar_agente()
+			combate()
 		}senao se(direcao == "s" e y < 6 e nao validacao_caixa(x, y + 1)){
 			anterior_x = x
 			anterior_y = y
@@ -233,6 +233,7 @@ programa
 			anterior_x = 1
 			anterior_y = 2
 			mover_caixa()
+			combate()
 		}senao se(direcao == "^c"){
 			abrir_terminal()
 			parou_por_algum_motivo = verdadeiro
@@ -503,8 +504,6 @@ programa
 		}
 		abrir_terminal()
 	}
-		}
-	}
 
 	funcao inteiro rodar_dado(){
 		inteiro numero_sorteado = u.sorteia(1, 20)
@@ -563,6 +562,7 @@ programa
 	}
 
 	funcao combate(){
+					
 		cadeia escolha_
 		
           inteiro valorDado = rodar_dado()
@@ -596,7 +596,24 @@ programa
 		u.aguarde(u.sorteia(300, 700))
 		
 		escreva("┌─ ENEMY STATUS ──────────────────────────────────────────────┐\n")
-		escreva("│ HP   [█████░░░░░]  27/50                                    │\n")
+		escreva("│ HP   [")
+
+		para(inteiro i = 0; i < (integridade_inimigo / bits_inimigo) * 10; i++){
+			escreva("█")
+		}
+		para(inteiro i = 0; i < 5 - (integridade_inimigo / bits_inimigo) * 10; i++){
+			escreva("░")
+		}
+
+		cadeia integridade_inimigo_texto = integridade_inimigo + ""
+		cadeia bits_inimigo_texto = bits_inimigo + ""
+		inteiro n_espacos = 6 - txt.numero_caracteres(integridade_inimigo_texto) + txt.numero_caracteres(bits_inimigo_texto)
+
+		escreva("]  ", integridade_inimigo, "/", bits_inimigo, "                            ")
+		para(inteiro i=0; i < n_espacos; i++){
+			escreva(" ")
+		}
+		escreva("│\n")
 		escreva("│ BUFFER: instável                                            │\n")
 		escreva("└─────────────────────────────────────────────────────────────┘\n\n")
 
@@ -604,9 +621,56 @@ programa
 		
 		escreva("┌─ COMMANDS ──────────────────────────────────────────────────┐\n")
 		escreva("│ attack    weapon    daemon                                  │\n")
-		escreva("│     scan      escape                                  │\n")
+		escreva("│      scan      escape                                       │\n")
 		escreva("└─────────────────────────────────────────────────────────────┘\n\n")
 		
 		escreva("> ") leia(escolha_)
+	}
+
+	funcao sorteio_inimigo(){
+
+		inteiro numero_sorteado
+
+		numero_sorteado = u.sorteia(0, 20)
+		se(numero_sorteado >= 18){
+			integridade_inimigo = 50
+			bits_inimigo = integridade_inimigo
+			valor_kernels = 100
+			numero_sorteado = u.sorteia(1, 3)
+			se(numero_sorteado == 1){
+				habilidade_inimigo = "STACK OVERFLOW"
+				dano_inimigo = 18
+			}senao se(numero_sorteado == 2){
+				habilidade_inimigo = "KERNEL PANIC"
+				dano_inimigo = 10
+			}senao{
+				habilidade_inimigo = "ROOTKIT"
+				dano_inimigo = 18
+			}
+		}senao se(numero_sorteado >= 15){
+			valor_kernels = 50
+			integridade_inimigo = 40
+			bits_inimigo = integridade_inimigo
+			habilidade_inimigo = "THREAD SPLIT"
+			dano_inimigo = 11
+		}senao se(numero_sorteado >= 10){
+			valor_kernels = 35
+			integridade_inimigo = 30
+			bits_inimigo = integridade_inimigo
+			habilidade_inimigo= "CACHE STRIKE"
+			dano_inimigo = 9
+		}senao se(numero_sorteado >= 1){
+			valor_kernels = 25 
+			integridade_inimigo = 20
+			bits_inimigo = integridade_inimigo
+			habilidade_inimigo = "SCAN"
+			dano_inimigo = 7
+		}senao{
+			valor_kernels = 10
+			integridade_inimigo = 20
+			bits_inimigo = integridade_inimigo
+			habilidade_inimigo = "PING"
+			dano_inimigo = 3
+		}
 	}
 }
