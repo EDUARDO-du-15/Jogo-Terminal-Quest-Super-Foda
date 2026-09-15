@@ -46,6 +46,12 @@ programa
 
 
 	funcao inicio(){
+		para(inteiro i = 0; i < 8; i++){
+			para(inteiro j = 0; j < 12; j++){
+				inimigoMorto[i][j] = falso
+			}
+		}
+		
 		para(inteiro i = 0; i< 8; i++){
 			para(inteiro j = 0; j<12; j++){
 				inimigoMorto[i][j] = falso
@@ -70,15 +76,17 @@ programa
 		u.aguarde(500)
 		cadeia comandos
 		fase = 2
-		pular_dialogo = terminalQuest()
 		chameJogo()
-		/*
+		pular_dialogo = terminalQuest()
+
+		
+		
 		se(nao pular_dialogo){
 			fala_inicial()
 		}
 
 		abrir_terminal()
-	*/}
+	}
 	
 	funcao fala_inicial(){
 		falas("- ... Hummm, o que?^      Onde estou?", 76, "jogador")
@@ -166,18 +174,17 @@ programa
 					y_chave = i
 
 					//fase2
-				}senao se(fase == 2 e ((i> 0 e i<7) e j == 7) ou (i == 4 e j==4)){
-					se(((i>0 e i<4) ou (i>4 e i<7)) e j == 7){
+				}senao se(fase == 2 e ((i > 0 e i < 7) e j == 7)){
+					se(i != 4 e j == 7){
 						matriz[i][j] = "|"
 					}
-				}senao se( i == 4 e j == 7){
-					se(nao inimigoMorto[4][7]){
-						matriz[i][j] = "$"
+				}senao se(i == 4 e j == 7){
+					se(nao inimigoMorto[i][j]){
+						matriz[i][j] = ""
 					}senao{
 						matriz[i][j] = "."
 					}
 				}senao se((i == 4 e j == 4) e (possui_chave[fase] == 0)){
-						
 					matriz[i][j] = "+"
 					x_chave = j
 					y_chave = i
