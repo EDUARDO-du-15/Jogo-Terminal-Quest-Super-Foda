@@ -46,13 +46,9 @@ programa
 
 
 	funcao inicio(){
-		para(inteiro i = 0; i < 8; i++){
-			para(inteiro j = 0; j < 12; j++){
-				inimigoMorto[i][j] = falso
-			}
-		}
-		
-		para(inteiro i = 0; i< 8; i++){
+
+	
+		para(inteiro i = 0; i<8; i++){
 			para(inteiro j = 0; j<12; j++){
 				inimigoMorto[i][j] = falso
 			}
@@ -72,10 +68,8 @@ programa
 				}
 			}
 		}
-		desenheInimigoBombado()
-		u.aguarde(500)
 		cadeia comandos
-		fase = 2
+		fase = 3
 		chameJogo()
 		pular_dialogo = terminalQuest()
 
@@ -159,8 +153,9 @@ programa
 					matriz[i][j] = "—"
 				}senao se(y == i e x == j){
 					matriz[i][j] = "#"
-
-					//fase0
+					
+				
+				//fase0
 				}senao se(fase == 0 e i == 1 e j == 7 e possui_chave[fase] == 0){
 					matriz[i][j] = "+"
 					x_chave = j
@@ -178,9 +173,9 @@ programa
 					se(i != 4 e j == 7){
 						matriz[i][j] = "|"
 					}
-				}senao se(i == 4 e j == 7){
+				senao se(i == 4 e j == 7){
 					se(nao inimigoMorto[i][j]){
-						matriz[i][j] = ""
+						matriz[i][j] = "$"
 					}senao{
 						matriz[i][j] = "."
 					}
@@ -189,24 +184,26 @@ programa
 					x_chave = j
 					y_chave = i
 				}senao se((i == 4 e j == 4) e (possui_chave[fase] == 1)){
-					matriz[i][j] = "."
+					matriz[i][j] = "."}
 
 						//fase3Montanha
-				}senao se(fase == 3 e ((i> 0 e i<7) e j == 7) ou (i == 4 e j==4)){
-					se(((i>0 e i<4) ou (i>4 e i<7)) e j == 7){
+				}senao se(fase == 3 e (j>2 e j<10) e (i!=4 e i!=3)){
+				se(i != 4 e i != 3 e (j == 3 ou j == 5 ou j == 7 ou j == 9)){
 						matriz[i][j] = "|"
-				}senao se( i == 4 e j == 7){
-					matriz[i][j] = "$"
-				}senao se((i == 4 e j == 4) e (possui_chave[fase] == 0)){
-						
-						matriz[i][j] = "+"
-						x_chave = j
-						y_chave = i
-				}senao se((i == 4 e j == 4) e (possui_chave[fase] == 1)){
+					}
+				senao se((i == 5 ou i == 2) e (j == 4 ou j == 6 ou j == 8)){
+					se(nao inimigoMorto[i][j]){
+						matriz[i][j] = "$"
+					}senao{
 						matriz[i][j] = "."
-				}
-				}senao se(validacao_caixa(j, i)){
-					matriz[i][j] = "□"
+					}
+				}senao se((i == 6 ou i == 1) e (j == 4 ou j == 6 ou j == 8) e (possui_chave[fase] == 0)){
+					matriz[i][j] = "+"
+					x_chave = 6
+					y_chave = 1
+				}senao se((i == 6 ou i == 1) e (j == 4 ou j == 6 ou j == 8) e (possui_chave[fase] == 1)){
+					matriz[i][j] = "."
+					}
 				}senao{
 					matriz[i][j] = "."
 				}
@@ -254,7 +251,7 @@ programa
 				anterior_y = y
 				x++
 				se(nao inimigoMorto[y][x] e ((matriz[y][x] == "$") ou (u.sorteia(1, 20) <=chanceInimigo))){
-					combate()
+					combate(verdadeiro)
 				}
 			}
 		}senao se(direcao == "a" e x >= 1){
@@ -269,7 +266,7 @@ programa
 				anterior_y = y
 				x--
 				se(nao inimigoMorto[y][x] e ((matriz[y][x] == "$") ou (u.sorteia(1, 20) <=chanceInimigo))){
-					combate()
+					combate(verdadeiro)
 				}
 			}
 		}senao se(direcao == "w" e y > 1 e nao validacao_caixa(x, y - 1)){
@@ -277,14 +274,14 @@ programa
 			anterior_y = y
 			y--
 			se(nao inimigoMorto[y][x] e ((matriz[y][x] == "$") ou (u.sorteia(1, 20) <=chanceInimigo))){
-					combate()
+					combate(verdadeiro)
 			}
 		}senao se(direcao == "s" e y < 6 e nao validacao_caixa(x, y + 1)){
 			anterior_x = x
 			anterior_y = y
 			y++
 			se(nao inimigoMorto[y][x] e ((matriz[y][x] == "$") ou (u.sorteia(1, 20) <=chanceInimigo))){
-					combate()
+					combate(verdadeiro)
 			}
 		}senao se(direcao == "1"){
 			fase = 1
@@ -666,8 +663,12 @@ programa
 		retorne numero_sorteado
 	}
 
-	funcao combate(){
-					
+	funcao combate(logico comece){
+
+		se(comece){
+			sorteio_inimigo()
+		}
+		real dano = 200
 		cadeia escolha_
 		u.aguarde(u.sorteia(300, 700))
 		
@@ -730,9 +731,10 @@ programa
 		
 		escreva("> ") leia(escolha_)
 		
-		se(escolha_ == "atack"){
-			bits_inimigo = bits_inimigo - (1.5 * rodar_dado())
-			se(bits_inimigo <=0){inimigoMorto[y][x] = verdadeiro}	
+		se(escolha_ == "attack"){
+			bits_inimigo = bits_inimigo - (dano * rodar_dado())
+			se(bits_inimigo <=0){inimigoMorto[y][x] = verdadeiro}
+			senao{combate(falso)}
 		}senao se(escolha_ == "daemon"){
 			mostrar_inventario(falso)
 		}senao se(escolha_ == "escape"){
@@ -744,10 +746,10 @@ programa
 					escreva("\n\n     PRESSIONE ENTER PARA CONTINUAR: ")
 					leia(pular_dialogo)
 				}
-				combate()
+				combate(falso)
 			}
 		}senao{
-			combate()
+			combate(falso)
 		}
 	}
 
