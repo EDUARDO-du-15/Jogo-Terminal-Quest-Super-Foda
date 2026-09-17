@@ -3,7 +3,9 @@ programa
 	inclua biblioteca Texto --> txt
 	inclua biblioteca Util --> u
 	
-	cadeia matriz[8][12], direcao = "d", itens[30], pos_caixa, GLOBAL_opcao, GLOBAL_inventario[5][6], GLOBAL_arquivos_ambiente[7], arma
+	cadeia matriz[8][12], direcao = "d", itens[30], pos_caixa, GLOBAL_opcao, GLOBAL_inventario[5][6], GLOBAL_arquivos_ambiente[7], arma = "0"
+	cadeia habilidade_inimigo
+	inteiro integridade_inimigo = 100, bits_inimigo = integridade_inimigo, dano_inimigo, valor_kernels
 	cadeia texto_daemon[7] = {
 		
 		"     ░▓▓░    ░▓▓░      ",
@@ -34,19 +36,24 @@ programa
 		"         ████          ",
 		"         ████          "
 	}
-
+	
 	inteiro y = 4, x = 1, anterior_x = 0, anterior_y = 4, fase = 0, integridade = 100, bits = integridade
-	inteiro x_chave, y_chave, possui_chave[5], n_itens = 0
+	inteiro x_chave, y_chave, n_itens = 0
+	inteiro  possui_chave[5] = {0,0,0,0,0}
 	inteiro x_caixa[3], y_caixa[3], caixa_moviday, caixa_movidax
-	const inteiro integridade_inimigo = 100
-	inteiro bits_inimigo = integridade_inimigo
 	real versao = 1.0, kernel = 0.0
-	logico parou_por_algum_motivo = falso, porta_saida = falso, porta_entrada = falso, segurando_caixa = falso
+	real dano = 0
+	logico parou_por_algum_motivo = falso, porta_saida = falso, porta_entrada = falso, segurando_caixa = falso, pular_dialogo, inimigoMorto[8][12]
 
 
 
 	funcao inicio(){
-
+	
+		para(inteiro i = 0; i<8; i++){
+			para(inteiro j = 0; j<12; j++){
+				inimigoMorto[i][j] = falso
+			}
+		}
 		para(inteiro i = 0; i < 5; i++){
 			para(inteiro j = 0; j < 6; j++){
 				se(i != 0 ou j != 0 e j != 1){
@@ -62,11 +69,10 @@ programa
 				}
 			}
 		}
-
-		logico pular_dialogo
 		cadeia comandos
-
 		pular_dialogo = terminalQuest()
+
+		
 		
 		se(nao pular_dialogo){
 			fala_inicial()
@@ -140,22 +146,72 @@ programa
 	funcao define_caractere(){
 		para(inteiro i = 0; i < 8; i++){
 			para(inteiro j = 0; j < 12; j++){
+				//borda
 				se(j == 11 ou j == 0){
 					matriz[i][j] = "|"
 				}senao se(i == 7 ou i == 0){
 					matriz[i][j] = "—"
+
+					//jogador
 				}senao se(y == i e x == j){
 					matriz[i][j] = "#"
+				}senao se(validacao_caixa(j, i)){
+					matriz[i][j] = "□"
+				
+					
+				
+				//fase0
 				}senao se(fase == 0 e i == 1 e j == 7 e possui_chave[fase] == 0){
 					matriz[i][j] = "+"
 					x_chave = j
 					y_chave = i
-				}senao se(fase == 1 e i == 1 e j == 7 e possui_chave[fase] == 0){
+				}
+				
+					//fase1
+				senao se(fase == 1 e (i == 1 e j == 7)){
+					se(possui_chave[fase] == 0 e i == 1 e j == 7){
+						matriz[i][j] = "+"
+						x_chave = j
+						y_chave = i
+					}
+
+					//fase2
+				}senao se(fase == 2 e ((i > 0 e i < 7) e j == 7) e (i == 4 e j == 4)){
+					se(i != 4 e j == 7){
+						matriz[i][j] = "|"
+					}
+				senao se(i == 4 e j == 7){
+					se(nao inimigoMorto[i][j]){
+						matriz[i][j] = "$"
+					}senao{
+						matriz[i][j] = "."
+					}
+				}senao se((i == 4 e j == 4) e (possui_chave[fase] != 1)){
 					matriz[i][j] = "+"
 					x_chave = j
 					y_chave = i
-				}senao se(validacao_caixa(j, i)){
-					matriz[i][j] = "□"
+				}senao se(i == 4 e j == 4){
+					matriz[i][j] = "."}
+
+						//fase3Montanha
+				}
+				senao se(fase == 3 e (j > 2 e j < 10) e (i != 4 e i != 3)){
+				se(j == 3 ou j == 5 ou j == 7 ou j == 9){
+						matriz[i][j] = "|"
+					}
+				senao se(i == 5 ou i == 2){
+					se(nao inimigoMorto[i][j]){
+						matriz[i][j] = "$"
+					}
+				}senao se(possui_chave[fase] != 1){
+					matriz[i][j] = "+"
+					x_chave = 6
+					y_chave = 1
+				}senao{
+					matriz[i][j] = "."
+					}
+
+				//espaco vazio
 				}senao{
 					matriz[i][j] = "."
 				}
@@ -175,6 +231,7 @@ programa
 
 	funcao desenha_matriz(){
 		limpa()
+		define_caractere()
 		escreva("operator@kernel:/world/sector_0", fase, "$ cat map.txt\n\nsector_0", fase, ".map  [kernel ", versao, "]\n\n")
 		para(inteiro i = 0; i < 8; i++){
 			escreva("   ")
@@ -186,7 +243,7 @@ programa
 	}
 
 	funcao movimentacao(){
-  
+  		inteiro chanceInimigo = 0
 		escreva("\ncwd: /world/sector_0", fase, "\npos: (", x, ",", y, ")\ninput: ")
 		leia(direcao)
 	  
@@ -201,6 +258,9 @@ programa
 				anterior_x = x
 				anterior_y = y
 				x++
+				se(nao inimigoMorto[y][x] e ((matriz[y][x] == "$") ou (u.sorteia(1, 20) <=chanceInimigo))){
+					combate(verdadeiro)
+				}
 			}
 		}senao se(direcao == "a" e x >= 1){
 			se(porta_entrada e (y == 3 ou y == 4) e x == 1){
@@ -209,26 +269,38 @@ programa
 				y = 4
 				possui_chave[fase] = 0
 				porta_saida = verdadeiro
-			}senao se(x < 10 e nao validacao_caixa(x - 1, y)){
+			}senao se(x > 1 e nao validacao_caixa(x - 1, y)){
 				anterior_x = x
 				anterior_y = y
 				x--
+				se(nao inimigoMorto[y][x] e ((matriz[y][x] == "$") ou (u.sorteia(1, 20) <=chanceInimigo))){
+					combate(verdadeiro)
+				}
 			}
 		}senao se(direcao == "w" e y > 1 e nao validacao_caixa(x, y - 1)){
 			anterior_x = x
 			anterior_y = y
 			y--
+			se(nao inimigoMorto[y][x] e ((matriz[y][x] == "$") ou (u.sorteia(1, 20) <=chanceInimigo))){
+					combate(verdadeiro)
+			}
 		}senao se(direcao == "s" e y < 6 e nao validacao_caixa(x, y + 1)){
 			anterior_x = x
 			anterior_y = y
 			y++
+			se(nao inimigoMorto[y][x] e ((matriz[y][x] == "$") ou (u.sorteia(1, 20) <=chanceInimigo))){
+					combate(verdadeiro)
+			}
 		}senao se(direcao == "1"){
-			fase = 1
+			fase++
+		}senao se(direcao == "2"){
+			fase--
 		}senao se(direcao == " "){
 			segurando_caixa = verdadeiro
 			anterior_x = 1
 			anterior_y = 2
 			mover_caixa()
+			
 		}senao se(direcao == "^c"){
 			abrir_terminal()
 			parou_por_algum_motivo = verdadeiro
@@ -316,7 +388,7 @@ programa
 		escreva("||                                         ||     COMANDOS SUPORTADOS:\n")
 		escreva("||                                         ||\n")
 		escreva("||                                         ||\n")
-		escreva("||                                         ||     > boot;\n")
+		escreva("||                                         ||     > cat map.txt;\n")
 		escreva("||   01101101  01100101 01101110 01110101  ||\n")
 		escreva("||    .-.-.-.   .---.   .-..-.   .-..-.    ||     > ls -l inv;\n")
 		escreva("||    | | | |   | |-    | .` |   | || |    ||\n")
@@ -351,10 +423,49 @@ programa
 		        "    \\|___| \\__\\|_______|\\|_______|\\_________\\   \\|__|                                 \n",
 		        "          \\|__|                  \\|_________|                                           ")
 	}
+
+	funcao desenheInimigoBombado(){
+		
+		cadeia virusBombado[31] = {
+"@@@@@@@@@@@@@@@@@@@@@@@@@%#*@@@@*@%*#*#%@@**%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@",
+"@@@@@@@@@@@@@@@@@@@@@@@@@@@@##%======++#==*=@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@",
+"@@@@@@@@@@%+-...:%@@@##%@@@@%*#*******=+*++==###@@@##@@@-=:-#@@@@@@@@@@@@@",
+"@@@@@@@@%...:.-..-@@@@@@%##+=++*#######*##*++=-*##%@@@@:-......+@@@@@@@@@@",
+"@@@@@@@%..:++*===#@@@@@@@@%=+***#####%%####**+=-@@@@@@%=+:-.-....-@@@@@@@@",
+"@@@@@@*...+@@@@@@@@@@@@#*#===#####%%%%%%###*#++=%@@@@@@@@@@@@@#....@@@@@@@",
+"@@@@@:..:.*@@@@@@@@@@@@+=*=++*####%%%%%%####*+*+*##**@@@@@@@@@@*....#@@@@@",
+"@@@%:.....+@@@@@@@@@@@@@@@-++**####%%%%###*#*++-###@@@@@@@@@@@@@.....*@@@@",
+"@@#:......*@@@@@@@@@@@@@@@#=+***####%%#**#***+=*@@@@@@@@@@@@@@@@......=@@@",
+"@%-:......@@@@@@@@@@@@@@###+=+****###**+=*++==+#@@@@@@@@@@@@@@@@:......=@@",
+"@+:......*@%=:=%@@@%=+#*@@@@%-*#++*****+#+===%@@##%@@@@@@@@@@@@@=.......#@",
+"%-:.....:.:......-........:-:*=====+++*#===:..:-..-*:..:+-....-%*=......+@",
+"%-:................-:.....:#+..---=----*+-:*............................=@",
+"@@#-........:-:.....::.....:.....==.:..-+..+*:.......=..............:-..-@",
+"@@@@@#=::.........--:::..........*...-.+#+..........-::...:...........:#@@",
+"@@@@@@@@%*:.......=:..-.........+*...-.............=................#@@@@@",
+"@@@@@@@@@@@@@@@@@@@=...-.............:............-...=@@@#*+=+#%@@@@@@@@@",
+"@@@@@@@@@@@@@@@@@@@@+...-........................-...-@@@@@@@@@@@@@@@@@@@@",
+"@@@@@@@@@@@@@@@@@@@@@#....-..........-.......-:::...:@@@@@@@@@@@@@@@@@@@@@",
+"@@@@@@@@@@@@@@@@@@@@@@*....:-........:........=....=@@@@@@@@@@@@@@@@@@@@@@",
+"@@@@@@@@@@@@@@@@@@@@@@@=...:....==-=....==+=-.....%@@@@@@@@@@@@@@@@@@@@@@@",
+"@@@@@@@@@@@@@@@@@@@@@@@@=.:.:...::.....:=:....:..*@@@@@@@@@@@@@@@@@@@@@@@@",
+"@@@@@@@@@@@@@@@@@@@@@@@@@-....-............+..-.%@@@@@@@@@@@@@@@@@@@@@@@@@",
+"@@@@@@@@@@@@@@@@@@@@@@@@@@......:==:........-..+@@@@@@@@@@@@@@@@@@@@@@@@@@",
+"@@@@@@@@@@@@@@@@@@@@@@@@@@..........:......-...*@@@@@@@@@@@@@@@@@@@@@@@@@@",
+"@@@@@@@@@@@@@@@@@@@@@@@@@@-.........-......:...%@@@@@@@@@@@@@@@@@@@@@@@@@@",
+"@@@@@@@@@@@@@@@@@@@@@@@@@@:...+:....-......=..:@@@@@@@@@@@@@@@@@@@@@@@@@@@",
+"@@@@@@@@@@@@@@@@@@@@@@@@@@....................:@@@@@@@@@@@@@@@@@@@@@@@@@@@",
+"@@@@@@@@@@@@@@@@@@@@@@@@@@:..-................=@@@@@@@@@@@@@@@@@@@@@@@@@@@",
+"@@@@@@@@@@@@@@@@@@@@@@@@@%:=................=.=@@@@@@@@@@@@@@@@@@@@@@@@@@@",
+"@@@@@@@@@@@@@@@@@@@@@@@@@*+=:..:..........:=++*%@@@@@@@@@@@@@@@@@@@@@@@@@@"}
+	
+		para(inteiro i = 0; i < 31; i++){
+			escreva(virusBombado[i], "\n")
+		}
+	}
 	
 	funcao chameJogo(){
 		enquanto(nao parou_por_algum_motivo){
-			define_caractere()
 			desenha_matriz()
 			movimentacao()
 		}
@@ -374,9 +485,10 @@ programa
 		abrir_terminal()
 	}
 
-	funcao mostrar_inventario(){
+	funcao mostrar_inventario(logico abrirTerminal){
 
 		cadeia sair
+		cadeia continuar
 		
 		escreva("\ntotal ", n_itens, "\n\n")
 		
@@ -387,7 +499,12 @@ programa
 				}
 			}
 		}
+		se(abrirTerminal){
 		abrir_terminal()
+	}senao{
+		escreva("Press enter to continue: ")
+		leia(continuar)
+	}
 	}
 
 	funcao adicionar_item(cadeia item){
@@ -411,7 +528,7 @@ programa
 		
 		se(comando == "cat map.txt")			{chameJogo()}
 		senao
-		se(comando == "ls -l inv")		{mostrar_inventario()}
+		se(comando == "ls -l inv")		{mostrar_inventario(verdadeiro)}
 		senao
 		se(comando == "ls")				{listar_ambiente()}
 		senao 
@@ -556,12 +673,17 @@ programa
 		retorne numero_sorteado
 	}
 
-	funcao combate(){
-					
-		cadeia escolha_
+	funcao combate(logico comece){
 		
-          inteiro valorDado = rodar_dado()
+		se(comece){
+			sorteio_inimigo()
+			dano = 1.5
+		}
+		
+		cadeia escolha_
 		u.aguarde(u.sorteia(300, 700))
+
+		limpa()
 		
 		escreva("┌─────────────────────────────────────────────────────────────┐\n")
 		escreva("│ Terminal Quest — Combat Session                             │\n")
@@ -569,6 +691,7 @@ programa
 		escreva("│ TARGET : daemon_corrompido                                  │\n")
 		escreva("│ PID    : 0347                                               │\n")
 		escreva("│ STATUS : HOSTIL                                             │\n")
+		escreva("│ ATAQUES : ROOTKIT                                           │\n")
 		escreva("└─────────────────────────────────────────────────────────────┘\n\n")
 
 		u.aguarde(u.sorteia(300, 700))
@@ -615,10 +738,100 @@ programa
 		u.aguarde(u.sorteia(300, 700))
 		
 		escreva("┌─ COMMANDS ──────────────────────────────────────────────────┐\n")
-		escreva("│ attack    weapon    daemon                                  │\n")
+		escreva("│ attack    daemon                                            │\n")
 		escreva("│      scan      escape                                       │\n")
 		escreva("└─────────────────────────────────────────────────────────────┘\n\n")
 		
 		escreva("> ") leia(escolha_)
+		
+		se(escolha_ == "attack"){
+			escolher_arma()
+			se(arma == "1"){
+				bits_inimigo = bits_inimigo - (dano * rodar_dado())
+			}senao se(arma == "0"){
+				dano += u.sorteia(2, 5) / 10
+			}
+			se(bits_inimigo <=0){
+				inimigoMorto[y][x] = verdadeiro
+			}senao{combate(falso)}
+		}senao se(escolha_ == "daemon"){
+			mostrar_inventario(falso)
+		}senao se(escolha_ == "escape"){
+			se(rodar_dado() >= 10){
+				desenha_matriz()
+			}senao{
+				se(nao pular_dialogo){
+					escreva_lento("Má sorte ein... haha", 70)
+					escreva("\n\n     PRESSIONE ENTER PARA CONTINUAR: ")
+					leia(pular_dialogo)
+				}
+				combate(falso)
+			}
+		}senao{
+			combate(falso)
+		}
+	}
+
+	funcao sorteio_inimigo(){
+
+		inteiro numero_sorteado
+
+		numero_sorteado = u.sorteia(0, 20)
+		//inimigo bombado
+		se(numero_sorteado >= 18){
+			integridade_inimigo = 50
+			bits_inimigo = integridade_inimigo
+			valor_kernels = 100
+			numero_sorteado = u.sorteia(1, 3)
+			se(numero_sorteado == 1){
+				habilidade_inimigo = "STACK OVERFLOW"
+				dano_inimigo = 18
+			}senao se(numero_sorteado == 2){
+				habilidade_inimigo = "KERNEL PANIC"
+				dano_inimigo = 10
+			}senao{
+				habilidade_inimigo = "ROOTKIT"
+				dano_inimigo = 18
+			}
+		}senao se(numero_sorteado >= 15){
+			valor_kernels = 50
+			integridade_inimigo = 40
+			bits_inimigo = integridade_inimigo
+			habilidade_inimigo = "THREAD SPLIT"
+			dano_inimigo = 11
+		}senao se(numero_sorteado >= 10){
+			valor_kernels = 35
+			integridade_inimigo = 30
+			bits_inimigo = integridade_inimigo
+			habilidade_inimigo= "CACHE STRIKE"
+			dano_inimigo = 9
+		}senao se(numero_sorteado >= 1){
+			valor_kernels = 25 
+			integridade_inimigo = 20
+			bits_inimigo = integridade_inimigo
+			habilidade_inimigo = "SCAN"
+			dano_inimigo = 7
+		}senao{
+			valor_kernels = 10
+			integridade_inimigo = 20
+			bits_inimigo = integridade_inimigo
+			habilidade_inimigo = "PING"
+			dano_inimigo = 3
+		}
+	}
+
+	funcao escolher_arma(){
+		cadeia passar_dialogo
+		arma = "0"
+		limpa()
+		escreva("========== ESCOLHA A SUA ARMA ==========\n\n")
+		escreva("     ----- 0 ----- 1 -----\n\n")
+		escreva("A arma zero pode aumentar seus atributos de ataque;\n\nJá ao usar a arma um, você pode atacar o inimigo")
+		escreva("\n\nESCOLHA SUA ARMA: ")
+		leia(arma)
+		se(arma != "0" e arma != "1"){
+			escreva("ARMA INVÁLIDA\n\nPRESSIONE ENTER PARA CONTINUAR: ")
+			leia(passar_dialogo)
+		}
 	}
 }
