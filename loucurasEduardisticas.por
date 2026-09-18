@@ -155,16 +155,20 @@ programa
 					//jogador
 				}senao se(y == i e x == j){
 					matriz[i][j] = "#"
-				}senao se(validacao_caixa(j, i)){
-					matriz[i][j] = "□"
+				/*}senao se(validacao_caixa(j, i)){
+					matriz[i][j] = "□"*/
 				
 					
 				
 				//fase0
 				}senao se(fase == 0 e i == 1 e j == 7 e possui_chave[fase] == 0){
-					matriz[i][j] = "+"
-					x_chave = j
-					y_chave = i
+					se(possui_chave[fase] == 0){
+						matriz[i][j] = "+"
+						x_chave = j
+						y_chave = i
+				}senao{
+					matriz[i][j] = "."
+					}
 				}
 				
 					//fase1
@@ -173,28 +177,32 @@ programa
 						matriz[i][j] = "+"
 						x_chave = j
 						y_chave = i
-					}
-
-					//fase2
-				}senao se(fase == 2 e ((i > 0 e i < 7) e j == 7) e (i == 4 e j == 4)){
-					se(i != 4 e j == 7){
-						matriz[i][j] = "|"
-					}
-				senao se(i == 4 e j == 7){
-					se(nao inimigoMorto[i][j]){
-						matriz[i][j] = "$"
 					}senao{
 						matriz[i][j] = "."
 					}
-				}senao se((i == 4 e j == 4) e (possui_chave[fase] != 1)){
-					matriz[i][j] = "+"
-					x_chave = j
-					y_chave = i
-				}senao se(i == 4 e j == 4){
-					matriz[i][j] = "."}
-
-						//fase3Montanha
 				}
+
+					//fase2
+				senao se(fase == 2 e (j == 7 ou (i == 4 e j == 4))){
+					se(i != 4 e j == 7){
+						matriz[i][j] = "|"
+					}senao se(i == 4 e j == 7){
+						se(nao inimigoMorto[i][j]){
+							matriz[i][j] = "$"
+						}senao{
+							matriz[i][j] = "."
+						}
+					}senao se(possui_chave[fase] == 0){
+						matriz[i][j] = "+"
+						x_chave = j
+						y_chave = i
+					}senao{
+						matriz[i][j] = "."
+					}
+				}
+				
+						//fase3Montanha
+
 				senao se(fase == 3 e (j > 2 e j < 10) e (i != 4 e i != 3)){
 				se(j == 3 ou j == 5 ou j == 7 ou j == 9){
 						matriz[i][j] = "|"
@@ -247,14 +255,14 @@ programa
 		escreva("\ncwd: /world/sector_0", fase, "\npos: (", x, ",", y, ")\ninput: ")
 		leia(direcao)
 	  
-		se(direcao == "d"){
+		se(matriz[y][x + 1] != "|" e direcao == "d"){
 			se(possui_chave[fase] == 1 e (y == 3 ou y == 4) e x == 10){
 				fase++
 				porta_saida = falso
 				possui_chave[fase] = 0
 				x = 1
 				y = 4
-			}senao se(x < 10 e nao validacao_caixa(x + 1, y)){
+			}senao se(nao validacao_caixa(x + 1, y)){
 				anterior_x = x
 				anterior_y = y
 				x++
@@ -262,7 +270,7 @@ programa
 					combate(verdadeiro)
 				}
 			}
-		}senao se(direcao == "a" e x >= 1){
+		}senao se(matriz[y][x-1] != "|" e direcao == "a"){
 			se(porta_entrada e (y == 3 ou y == 4) e x == 1){
 				fase--
 				x = 10
@@ -277,14 +285,14 @@ programa
 					combate(verdadeiro)
 				}
 			}
-		}senao se(direcao == "w" e y > 1 e nao validacao_caixa(x, y - 1)){
+		}senao se(matriz[y - 1][x] != "—" e direcao == "w" e nao validacao_caixa(x, y - 1)){
 			anterior_x = x
 			anterior_y = y
 			y--
 			se(nao inimigoMorto[y][x] e ((matriz[y][x] == "$") ou (u.sorteia(1, 20) <=chanceInimigo))){
 					combate(verdadeiro)
 			}
-		}senao se(direcao == "s" e y < 6 e nao validacao_caixa(x, y + 1)){
+		}senao se(matriz[y + 1][x] != "—" e direcao == "s" e y < 6 e nao validacao_caixa(x, y + 1)){
 			anterior_x = x
 			anterior_y = y
 			y++
@@ -299,8 +307,8 @@ programa
 			segurando_caixa = verdadeiro
 			anterior_x = 1
 			anterior_y = 2
-			mover_caixa()
-			
+		}senao se(direcao == "  "){
+			segurando_caixa = falso
 		}senao se(direcao == "^c"){
 			abrir_terminal()
 			parou_por_algum_motivo = verdadeiro
@@ -674,6 +682,9 @@ programa
 	}
 
 	funcao combate(logico comece){
+
+		inteiro numero_quadrados_jogador = (bits * 10 / integridade)
+		inteiro numero_quadrados_inimigo = (bits_inimigo * 10 / integridade_inimigo)
 		
 		se(comece){
 			sorteio_inimigo()
@@ -699,10 +710,10 @@ programa
 		escreva("┌─ USER STATUS ───────────────────────────────────────────────┐\n")
 		escreva("│ INTEGRIDADE   [")
 
-		para(inteiro i = 0; i < (integridade / bits) * 10; i++){
+		para(inteiro i = 0; i < numero_quadrados_jogador; i++){
 			escreva("█")
 		}
-		para(inteiro i = 0; i < 5 - (integridade / bits) * 10; i++){
+		para(inteiro i = 0; i < 10 - numero_quadrados_jogador; i++){
 			escreva("░")
 		}
 		
@@ -714,12 +725,12 @@ programa
 		u.aguarde(u.sorteia(300, 700))
 		
 		escreva("┌─ ENEMY STATUS ──────────────────────────────────────────────┐\n")
-		escreva("│ HP   [")
+		escreva("│ INTEGRIDADE [")
 
-		para(inteiro i = 0; i < (integridade_inimigo / bits_inimigo) * 10; i++){
+		para(inteiro i = 0; i < numero_quadrados_inimigo; i++){
 			escreva("█")
 		}
-		para(inteiro i = 0; i < 5 - (integridade_inimigo / bits_inimigo) * 10; i++){
+		para(inteiro i = 0; i < 10 - numero_quadrados_inimigo; i++){
 			escreva("░")
 		}
 
@@ -727,7 +738,8 @@ programa
 		cadeia bits_inimigo_texto = bits_inimigo + ""
 		inteiro n_espacos = 6 - txt.numero_caracteres(integridade_inimigo_texto) + txt.numero_caracteres(bits_inimigo_texto)
 
-		escreva("]  ", integridade_inimigo, "/", bits_inimigo, "                            ")
+		escreva("]  ", integridade_inimigo, "/", bits_inimigo, " BITS                  ")
+		
 		para(inteiro i=0; i < n_espacos; i++){
 			escreva(" ")
 		}
@@ -753,7 +765,9 @@ programa
 			}
 			se(bits_inimigo <=0){
 				inimigoMorto[y][x] = verdadeiro
-			}senao{combate(falso)}
+			}senao{
+				combate(falso)
+			}
 		}senao se(escolha_ == "daemon"){
 			mostrar_inventario(falso)
 		}senao se(escolha_ == "escape"){
