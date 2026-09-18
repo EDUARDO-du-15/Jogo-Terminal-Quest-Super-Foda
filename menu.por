@@ -3,7 +3,7 @@ programa
 	inclua biblioteca Texto --> txt
 	inclua biblioteca Util --> u
 	
-	cadeia matriz[8][12], direcao = "d", itens[30], pos_caixa, GLOBAL_opcao, GLOBAL_inventario[5][6], GLOBAL_arquivos_ambiente[7], arma
+	cadeia matriz[8][12], direcao = "d", itens[30], pos_caixa, GLOBAL_opcao, GLOBAL_inventario[5][6], GLOBAL_arquivos_ambiente[7], arma = "0"
 	cadeia habilidade_inimigo
 	inteiro integridade_inimigo = 100, bits_inimigo = integridade_inimigo, dano_inimigo, valor_kernels
 	cadeia texto_daemon[7] = {
@@ -42,6 +42,7 @@ programa
 	inteiro  possui_chave[5] = {0,0,0,0,0}
 	inteiro x_caixa[3], y_caixa[3], caixa_moviday, caixa_movidax
 	real versao = 1.0, kernel = 0.0
+	real dano = 0
 	logico parou_por_algum_motivo = falso, porta_saida = falso, porta_entrada = falso, segurando_caixa = falso, pular_dialogo, inimigoMorto[8][12]
 
 
@@ -69,8 +70,6 @@ programa
 			}
 		}
 		cadeia comandos
-		fase = 3
-		chameJogo()
 		pular_dialogo = terminalQuest()
 
 		
@@ -156,50 +155,63 @@ programa
 					//jogador
 				}senao se(y == i e x == j){
 					matriz[i][j] = "#"
+				}senao se(validacao_caixa(j, i)){
+					matriz[i][j] = "□"
+				
 					
 				
 				//fase0
 				}senao se(fase == 0 e i == 1 e j == 7 e possui_chave[fase] == 0){
-					matriz[i][j] = "+"
-					x_chave = j
-					y_chave = i
+					se(possui_chave[fase] == 0){
+						matriz[i][j] = "+"
+						x_chave = j
+						y_chave = i
+				}senao{
+					matriz[i][j] = "."
+					}
 				}
 				
 					//fase1
-				senao se(fase == 1 e i == 1 e j == 7 e possui_chave[fase] == 0){
-					matriz[i][j] = "+"
-					x_chave = j
-					y_chave = i
-
-					//fase2
-				}senao se(fase == 2 e ((i > 0 e i < 7) e j == 7) ou (i ==4 e j== 4)){
-					se(i != 4 e j == 7){
-						matriz[i][j] = "|"
-					}
-				senao se(i == 4 e j == 7){
-					se(nao inimigoMorto[i][j]){
-						matriz[i][j] = "$"
+				senao se(fase == 1 e (i == 1 e j == 7)){
+					se(possui_chave[fase] == 0 e i == 1 e j == 7){
+						matriz[i][j] = "+"
+						x_chave = j
+						y_chave = i
 					}senao{
 						matriz[i][j] = "."
 					}
-				}senao se((i == 4 e j == 4) e (possui_chave[fase] != 1)){
-					matriz[i][j] = "+"
-					x_chave = j
-					y_chave = i
-				}senao se(i == 4 e j == 4){
-					matriz[i][j] = "."}
-
-						//fase3Montanha
 				}
-				senao se(fase == 3 e (j>2 e j<10) e (i!=4 e i!=3)){
-				se(i != 4 e i != 3 e (j == 3 ou j == 5 ou j == 7 ou j == 9)){
+
+					//fase2
+				senao se(fase == 2 e (j == 7 ou (i == 4 e j == 4))){
+					se(i != 4 e j == 7){
+						matriz[i][j] = "|"
+					}senao se(i == 4 e j == 7){
+						se(nao inimigoMorto[i][j]){
+							matriz[i][j] = "$"
+						}senao{
+							matriz[i][j] = "."
+						}
+					}senao se(possui_chave[fase] == 0){
+						matriz[i][j] = "+"
+						x_chave = j
+						y_chave = i
+					}senao{
+						matriz[i][j] = "."
+					}
+				}
+				
+						//fase3Montanha
+
+				senao se(fase == 3 e (j > 2 e j < 10) e (i != 4 e i != 3)){
+				se(j == 3 ou j == 5 ou j == 7 ou j == 9){
 						matriz[i][j] = "|"
 					}
-				senao se((i == 5 ou i == 2) e (j>2 e j<10)){
+				senao se(i == 5 ou i == 2){
 					se(nao inimigoMorto[i][j]){
 						matriz[i][j] = "$"
 					}
-				}senao se(i != 4 e i!=3 e j>2 e j<10 e possui_chave[fase] != 1){
+				}senao se(possui_chave[fase] != 1){
 					matriz[i][j] = "+"
 					x_chave = 6
 					y_chave = 1
@@ -288,13 +300,16 @@ programa
 					combate(verdadeiro)
 			}
 		}senao se(direcao == "1"){
-			fase = 1
+			fase++
+		}senao se(direcao == "2"){
+			fase--
 		}senao se(direcao == " "){
 			segurando_caixa = verdadeiro
 			anterior_x = 1
 			anterior_y = 2
 			mover_caixa()
-			
+		}senao se(direcao == "  "){
+			segurando_caixa = falso
 		}senao se(direcao == "^c"){
 			abrir_terminal()
 			parou_por_algum_motivo = verdadeiro
@@ -668,13 +683,16 @@ programa
 	}
 
 	funcao combate(logico comece){
-
+		
 		se(comece){
 			sorteio_inimigo()
+			dano = 1.5
 		}
-		real dano = 200
+		
 		cadeia escolha_
 		u.aguarde(u.sorteia(300, 700))
+
+		limpa()
 		
 		escreva("┌─────────────────────────────────────────────────────────────┐\n")
 		escreva("│ Terminal Quest — Combat Session                             │\n")
@@ -736,9 +754,15 @@ programa
 		escreva("> ") leia(escolha_)
 		
 		se(escolha_ == "attack"){
-			bits_inimigo = bits_inimigo - (dano * rodar_dado())
-			se(bits_inimigo <=0){inimigoMorto[y][x] = verdadeiro}
-			senao{combate(falso)}
+			escolher_arma()
+			se(arma == "1"){
+				bits_inimigo = bits_inimigo - (dano * rodar_dado())
+			}senao se(arma == "0"){
+				dano += u.sorteia(2, 5) / 10
+			}
+			se(bits_inimigo <=0){
+				inimigoMorto[y][x] = verdadeiro
+			}senao{combate(falso)}
 		}senao se(escolha_ == "daemon"){
 			mostrar_inventario(falso)
 		}senao se(escolha_ == "escape"){
@@ -802,6 +826,21 @@ programa
 			bits_inimigo = integridade_inimigo
 			habilidade_inimigo = "PING"
 			dano_inimigo = 3
+		}
+	}
+
+	funcao escolher_arma(){
+		cadeia passar_dialogo
+		arma = "0"
+		limpa()
+		escreva("========== ESCOLHA A SUA ARMA ==========\n\n")
+		escreva("     ----- 0 ----- 1 -----\n\n")
+		escreva("A arma zero pode aumentar seus atributos de ataque;\n\nJá ao usar a arma um, você pode atacar o inimigo")
+		escreva("\n\nESCOLHA SUA ARMA: ")
+		leia(arma)
+		se(arma != "0" e arma != "1"){
+			escreva("ARMA INVÁLIDA\n\nPRESSIONE ENTER PARA CONTINUAR: ")
+			leia(passar_dialogo)
 		}
 	}
 }
