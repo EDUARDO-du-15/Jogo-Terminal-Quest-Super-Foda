@@ -754,13 +754,13 @@ programa
 		u.aguarde(u.sorteia(300, 700))
 		
 		escreva("┌─ COMMANDS ──────────────────────────────────────────────────┐\n")
-		escreva("│ attack    daemon                                            │\n")
-		escreva("│      scan      escape                                       │\n")
+		escreva("│ ./attack    ./daemon                                        │\n")
+		escreva("│      ./scan      ./escape                                       │\n")
 		escreva("└─────────────────────────────────────────────────────────────┘\n\n")
 		
-		escreva("> ") leia(escolha_)
+		escreva("operator@kernel:~/Arena?$: ./") leia(escolha_)
 		
-		se(escolha_ == "./attack"){
+		se(escolha_ == "attack"){
 			escolher_arma()
 			se(arma == "1"){
 				bits_inimigo -= dano * rodar_dado()
@@ -773,9 +773,9 @@ programa
 			}senao{
 				combate(falso)
 			}
-		}senao se(escolha_ == "./daemon"){
+		}senao se(escolha_ == "daemon"){
 			mostrar_inventario(falso)
-		}senao se(escolha_ == "./escape"){
+		}senao se(escolha_ == "escape"){
 			se(rodar_dado() >= 10){
 				desenha_matriz()
 			}senao{
