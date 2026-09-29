@@ -285,7 +285,7 @@ programa
 				anterior_y = y
 				x++
 				se(nao inimigoMorto[y][x] e ((matriz[y][x] == "$") ou (u.sorteia(1, 20) <=chanceInimigo))){
-					combate(verdadeiro)
+					combate(verdadeiro, falso)
 				}
 			}
 		}senao se(matriz[y][x-1] != "|" e direcao == "a"){
@@ -300,7 +300,7 @@ programa
 				anterior_y = y
 				x--
 				se(nao inimigoMorto[y][x] e ((matriz[y][x] == "$") ou (u.sorteia(1, 20) <=chanceInimigo))){
-					combate(verdadeiro)
+					combate(verdadeiro, falso)
 				}
 			}
 		}senao se(matriz[y - 1][x] != "—" e direcao == "w" e nao validacao_caixa(x, y - 1)){
@@ -308,14 +308,14 @@ programa
 			anterior_y = y
 			y--
 			se(nao inimigoMorto[y][x] e ((matriz[y][x] == "$") ou (u.sorteia(1, 20) <=chanceInimigo))){
-					combate(verdadeiro)
+					combate(verdadeiro, falso)
 			}
 		}senao se(matriz[y + 1][x] != "—" e direcao == "s" e y < 6 e nao validacao_caixa(x, y + 1)){
 			anterior_x = x
 			anterior_y = y
 			y++
 			se(nao inimigoMorto[y][x] e ((matriz[y][x] == "$") ou (u.sorteia(1, 20) <=chanceInimigo))){
-					combate(verdadeiro)
+					combate(verdadeiro, falso)
 			}
 		}senao se(direcao == "1"){
 			fase++
@@ -770,9 +770,9 @@ programa
 
 		cadeia integridade_inimigo_texto = integridade_inimigo + ""
 		cadeia bits_inimigo_texto = bits_inimigo + ""
-		inteiro n_espacos = 2 - txt.numero_caracteres(bits_inimigo_texto)
+		inteiro n_espacos = 28 - txt.numero_caracteres(bits_inimigo_texto) - txt.numero_caracteres(integridade_inimigo_texto)
 
-		escreva("]  ", bits_inimigo, "/", integridade_inimigo, " BITS                        ")
+		escreva("]  ", bits_inimigo, "/", integridade_inimigo, " BITS")
 		
 		para(inteiro i = 0; i < n_espacos; i++){
 			escreva(" ")
@@ -785,7 +785,7 @@ programa
 		
 		escreva("┌─ COMMANDS ──────────────────────────────────────────────────┐\n")
 		escreva("│ ./attack    ./daemon                                        │\n")
-		escreva("│      ./scan      ./escape                                       │\n")
+		escreva("│      ./scan      ./escape                                   │\n")
 		escreva("└─────────────────────────────────────────────────────────────┘\n\n")
 		
 		escreva("operator@kernel:~/Arena?$: ./") leia(escolha_)
