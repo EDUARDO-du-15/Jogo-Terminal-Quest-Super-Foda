@@ -1255,6 +1255,7 @@ programa
 	}
 
 	funcao morreu(){
+		limpa()
 		escreva("        .--.\n")
 		escreva("       |o_o |\n")
 		escreva("       |:_/ |\n")
