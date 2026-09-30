@@ -6,6 +6,7 @@ programa
 	cadeia matriz[8][12], direcao = "d", itens[30], pos_caixa, GLOBAL_opcao, GLOBAL_inventario[5][6], GLOBAL_arquivos_ambiente[7], arma = "0"
 	cadeia habilidade_inimigo
 	inteiro integridade_inimigo = 100, bits_inimigo = integridade_inimigo, dano_inimigo, valor_kernels
+	
 	cadeia texto_daemon[7] = {
 		
 		"     ░▓▓░    ░▓▓░      ",
@@ -16,6 +17,7 @@ programa
 		"      ░▒▓▓▓▓▓▓▒░       ",
 		"        ░▓▓▓▓░         "
 	}
+	
 	cadeia texto_jogador[7] = {
 		
 	    "        ▒▒▒▒▒▒▒        ",
@@ -26,6 +28,7 @@ programa
 	    "       ██▓███▓▓█       ",
 	    "       ▓███ ▓███       "
 	}
+	
 	cadeia texto_desconhecido[7] = {
 		
 		"       ████████        ",
@@ -43,7 +46,7 @@ programa
 	inteiro x_caixa[3], y_caixa[3], caixa_moviday, caixa_movidax
 	real versao = 1.0, kernel = 0.0
 	real dano = 0.0
-	logico parou_por_algum_motivo = falso, porta_saida = falso, porta_entrada = falso, segurando_caixa = falso, pular_dialogo, inimigoMorto[8][12]
+	logico parou_por_algum_motivo = falso, porta_saida = falso, porta_entrada = falso, segurando_caixa = falso, pular_dialogo, inimigoMorto[8][12], chefeMorto = falso
 
 
 
@@ -69,10 +72,11 @@ programa
 				}
 			}
 		}
-
-		
-		cadeia comandos 
+		fase = 4
+		x = 5
+		y = 4
 		chameJogo()
+		cadeia comandos 
 		pular_dialogo = terminalQuest()
 
 		se(nao pular_dialogo){
@@ -223,6 +227,20 @@ programa
 						}
 
 				//espaco vazio
+				}senao se(fase == 4 e (j == 4 e i == 4)){
+					se(possui_chave[fase] != 1){
+						matriz[i][j] = "+"
+						x_chave = j
+						y_chave = i
+					}senao{
+						se(j == 4 e i==4){
+							matriz[i][j] = "."
+						}
+						se(nao chefeMorto e x == 6){
+							chameChefe()
+						}
+					}
+					//espaco vazio
 				}senao{
 					matriz[i][j] = "."
 				}
@@ -242,7 +260,6 @@ programa
 
 	funcao desenha_matriz(){
 		limpa()
-		define_caractere()
 		escreva("operator@kernel:/world/sector_0", fase, "$ cat map.txt\n\nsector_0", fase, ".map  [kernel ", versao, "]\n\n")
 		para(inteiro i = 0; i < 8; i++){
 			escreva("   ")
@@ -270,7 +287,7 @@ programa
 				anterior_y = y
 				x++
 				se(nao inimigoMorto[y][x] e ((matriz[y][x] == "$") ou (u.sorteia(1, 20) <=chanceInimigo))){
-					combate(verdadeiro)
+					combate(verdadeiro, falso)
 				}
 			}
 		}senao se(matriz[y][x-1] != "|" e direcao == "a"){
@@ -285,7 +302,7 @@ programa
 				anterior_y = y
 				x--
 				se(nao inimigoMorto[y][x] e ((matriz[y][x] == "$") ou (u.sorteia(1, 20) <=chanceInimigo))){
-					combate(verdadeiro)
+					combate(verdadeiro, falso)
 				}
 			}
 		}senao se(matriz[y - 1][x] != "—" e direcao == "w" e nao validacao_caixa(x, y - 1)){
@@ -293,14 +310,14 @@ programa
 			anterior_y = y
 			y--
 			se(nao inimigoMorto[y][x] e ((matriz[y][x] == "$") ou (u.sorteia(1, 20) <=chanceInimigo))){
-					combate(verdadeiro)
+					combate(verdadeiro, falso)
 			}
 		}senao se(matriz[y + 1][x] != "—" e direcao == "s" e y < 6 e nao validacao_caixa(x, y + 1)){
 			anterior_x = x
 			anterior_y = y
 			y++
 			se(nao inimigoMorto[y][x] e ((matriz[y][x] == "$") ou (u.sorteia(1, 20) <=chanceInimigo))){
-					combate(verdadeiro)
+					combate(verdadeiro, falso)
 			}
 		}senao se(direcao == "1"){
 			fase++
@@ -399,15 +416,15 @@ programa
 		escreva("||                                         ||     COMANDOS SUPORTADOS:\n")
 		escreva("||                                         ||\n")
 		escreva("||                                         ||\n")
-		escreva("||                                         ||     > cat map.txt;\n")
+		escreva("||                                         ||     > ./map.sh;\n")
 		escreva("||   01101101  01100101 01101110 01110101  ||\n")
 		escreva("||    .-.-.-.   .---.   .-..-.   .-..-.    ||     > ls -l inv;\n")
 		escreva("||    | | | |   | |-    | .` |   | || |    ||\n")
-		escreva("||    `-'-'-'   `---'   `-'`-'   `----'    ||     > ls;\n")
+		escreva("||    `-'-'-'   `---'   `-'`-'   `----'    ||     > ls -l;\n")
 		escreva("||                                         ||\n")
-		escreva("||                                         ||     > help;\n")
+		escreva("||                                         ||     > ./help.sh;\n")
 		escreva("||                                         ||\n")
-		escreva("||                                         ||     > logout;\n")
+		escreva("||                                         ||     > ./logout.sh;\n")
 		escreva("\\===========================================/\n")
 
 		abrir_terminal()
@@ -478,31 +495,41 @@ programa
 	
 	funcao chameJogo(){
 		enquanto(nao parou_por_algum_motivo){
+			define_caractere()
 			desenha_matriz()
 			movimentacao()
 		}
 	}
 
-	funcao ajude(){
-		cadeia c
-		
-		escreva("\nComandos:\n")
-		escreva("\nboot          - Comece a jogar")
-		escreva("\ncat inventory - Olhar inventario")
-		escreva("\nls            - Olhe o ambiente")
-		escreva("\nlogout        - Sair do jogo")
-		escreva("\n\n\nComo Jogar:")
-		escreva("\n\nwasd para movimentação, confirme com ENTER após cada tecla")
-		escreva("\nColete as chaves(+) para abrir as portas e passar de nível.\n")
+	funcao help(){
+		escreva("┌─────────────────────────────────────────────────────────────┐\n")
+		escreva("│                         HELP                                │\n")
+		escreva("├─────────────────────────────────────────────────────────────┤\n")
+		escreva("│                                                             │\n")
+		escreva("│  ./map.sh      - Comece a jogar                             │\n")
+		escreva("│  ls -l inv     - Olhar inventario                           │\n")
+		escreva("│  ls -l         - Olhe o ambiente                            │\n")
+		escreva("│  ./logout      - Sair do jogo                               │\n")
+		escreva("│                                                             │\n")
+		escreva("├─────────────────────────────────────────────────────────────┤\n")
+		escreva("│                      COMO JOGAR                             │\n")
+		escreva("│                                                             │\n")
+		escreva("│  wasd          - Movimentação                               │\n")
+		escreva("│  ENTER         - Confirmar cada tecla                       │\n")
+		escreva("│  (+)           - Coletar chaves                             │\n")
+		escreva("│  \"Break\"       - Voltar terminal de comandos                │\n")
+		escreva("│                                                             │\n")
+		escreva("│  Colete as chaves para abrir as portas e passar de nivel.   │\n")
+		escreva("│                                                             │\n")
+		escreva("└─────────────────────────────────────────────────────────────┘\n")
 		abrir_terminal()
 	}
 
 	funcao mostrar_inventario(logico abrirTerminal){
 
-		cadeia sair
 		cadeia continuar
 		
-		escreva("\ntotal ", n_itens, "\n\n")
+		escreva("\n\ntotal ", n_itens, "\n\n")
 		
 		para(inteiro i = 0; i < 5; i++){
 			para(inteiro j = 0; j < 6; j++){
@@ -513,10 +540,10 @@ programa
 		}
 		se(abrirTerminal){
 		abrir_terminal()
-	}senao{
-		escreva("Press enter to continue: ")
-		leia(continuar)
-	}
+		}senao{
+			escreva("Press enter to continue: ")
+			leia(continuar)
+		}
 	}
 
 	funcao adicionar_item(cadeia item){
@@ -538,13 +565,13 @@ programa
 		escreva("\noperator@kernel:~$: ")
 		leia(comando)
 		
-		se(comando == "cat map.txt")			{chameJogo()}
+		se(comando == "./map.sh")			{chameJogo()}
 		senao
 		se(comando == "ls -l inv")		{mostrar_inventario(verdadeiro)}
 		senao
-		se(comando == "ls")				{listar_ambiente()}
+		se(comando == "ls -l")				{listar_ambiente()}
 		senao 
-		se(comando == "logout"){
+		se(comando == "./logout.sh"){
 			escreva("\nlogout")
 			u.aguarde(200)
 			limpa()
@@ -565,7 +592,7 @@ programa
 			
 		}
 		senao
-		se(comando == "help")			{ajude()}
+		se(comando == "./help.sh")			{help()}
 		senao
 		se(comando == "cat readme.txt")	{menu()}
 		senao
@@ -685,7 +712,12 @@ programa
 		retorne numero_sorteado
 	}
 
-	funcao combate(logico comece){
+	funcao combate(logico comece, logico boss){
+
+		se(boss){
+			integridade_inimigo = 150
+			bits_inimigo = integridade_inimigo
+		}
 
 		real numero_quadrados_jogador = (bits * 10.0 / integridade)
 		real numero_quadrados_inimigo = (bits_inimigo * 10.0 / integridade_inimigo)
@@ -740,9 +772,9 @@ programa
 
 		cadeia integridade_inimigo_texto = integridade_inimigo + ""
 		cadeia bits_inimigo_texto = bits_inimigo + ""
-		inteiro n_espacos = 2 - txt.numero_caracteres(bits_inimigo_texto)
+		inteiro n_espacos = 28 - txt.numero_caracteres(bits_inimigo_texto) - txt.numero_caracteres(integridade_inimigo_texto)
 
-		escreva("]  ", bits_inimigo, "/", integridade_inimigo, " BITS                        ")
+		escreva("]  ", bits_inimigo, "/", integridade_inimigo, " BITS")
 		
 		para(inteiro i = 0; i < n_espacos; i++){
 			escreva(" ")
@@ -755,7 +787,7 @@ programa
 		
 		escreva("┌─ COMMANDS ──────────────────────────────────────────────────┐\n")
 		escreva("│ ./attack    ./daemon                                        │\n")
-		escreva("│      ./scan      ./escape                                       │\n")
+		escreva("│      ./scan      ./escape                                   │\n")
 		escreva("└─────────────────────────────────────────────────────────────┘\n\n")
 		
 		escreva("operator@kernel:~/Arena?$: ./") leia(escolha_)
@@ -771,7 +803,7 @@ programa
 				inimigoMorto[y][x] = verdadeiro
 				sorteio_inimigo()
 			}senao{
-				combate(falso)
+				combate(falso, boss)
 			}
 		}senao se(escolha_ == "daemon"){
 			mostrar_inventario(falso)
@@ -784,10 +816,10 @@ programa
 					escreva("\n\n     PRESSIONE ENTER PARA CONTINUAR: ")
 					leia(pular_dialogo)
 				}
-				combate(falso)
+				combate(falso, boss)
 			}
 		}senao{
-			combate(falso)
+			combate(falso, boss)
 		}
 	}
 
@@ -880,5 +912,281 @@ programa
 				escolheu_certo = verdadeiro
 			}
 		}enquanto(nao escolheu_certo)
+	}
+
+	funcao chameChefe(){
+		para(inteiro k = 1; k <= 4; k++){
+
+			//define_matriz
+			para(inteiro i = 0; i < 8; i++){
+				para(inteiro j = 0; j < 12; j++){
+					
+					
+					se(k == 1){
+					//borda
+						se(j == 9 e i == 0){
+							matriz[i][j] = "_"
+						}senao se(j == 11 ou j == 0){
+							matriz[i][j] = "|"
+						}senao se(i == 7 ou i == 0){
+							se(i ==  9){
+								matriz[i][j] = "&"
+							}senao{
+							matriz[i][j] = "—"
+							}
+						}
+						//jogador
+						senao se(y == i e x == j){
+							matriz[i][j] = "#"
+						}senao{
+							matriz[i][j] = "."
+						}
+					}
+
+					senao se(k == 2 ou k == 5){
+					//borda
+						se(j == 9 e i == 0){
+							matriz[i][j] = "."
+						}senao se((i == 1 e ( j == 10 ou j == 8)) ou i == 2 e j == 9){
+							 matriz[i][j] = "*"
+						}
+						senao se(j == 11 ou j == 0){
+							matriz[i][j] = "|"
+						}senao se(i == 7 ou i == 0){
+							matriz[i][j] = "—"
+							
+						}
+						//jogador
+						senao se(y == i e x == j){
+							matriz[i][j] = "#"
+						}senao{
+							matriz[i][j] = "."
+						}
+					}
+
+					senao se(k == 3){
+					//borda
+					
+						se(j == 9 e i == 0){
+							matriz[i][j] = "?"
+						}senao se((i == 1 e ( j == 10 ou j == 8)) ou i == 2 e j == 9){
+							 matriz[i][j] = "*"
+						}
+						senao se(j == 11 ou j == 0){
+							matriz[i][j] = "|"
+						}senao se(i == 7 ou i == 0){
+							se(i ==  9){
+								matriz[i][j] = "&"
+							}senao{
+							matriz[i][j] = "—"
+							}
+						}
+						//jogador
+						senao se(y == i e x == j){
+							matriz[i][j] = "#"
+						}senao{
+							matriz[i][j] = "."
+						}
+					}
+					senao se(k == 4){
+					//borda
+					
+						se(j == 9 e i == 0){
+							matriz[i][j] = "."
+						}senao se(j == 9 e i == 1){
+							matriz[i][j] = "?"
+						}senao se((i == 1 e ( j == 10 ou j == 8)) ou i == 2 e j == 9){
+							 matriz[i][j] = "*"
+						}
+						senao se(j == 11 ou j == 0){
+							matriz[i][j] = "|"
+						}senao se(i == 7 ou i == 0){
+							matriz[i][j] = "—"
+						}
+						//jogador
+						senao se(y == i e x == j){
+							matriz[i][j] = "#"
+						}senao{
+							matriz[i][j] = "."
+						}
+					}
+					senao se(k == 6){
+					//borda
+					
+						se(j == 9 e i == 0){
+							matriz[i][j] = "."
+							
+						}senao se((i == 1 e ( j == 10 ou j == 8)) ou i == 2 e j == 9){
+							 matriz[i][j] = "*"
+							 
+						}senao se(j == 11 ou j == 0){
+							matriz[i][j] = "|"
+							
+						}senao se(i == 7 ou i == 0){
+							matriz[i][j] = "—"
+						}
+						//jogador
+						senao se(y == i e x == j){
+							matriz[i][j] = "#"
+						}senao{
+							matriz[i][j] = "."
+						}
+					}
+				}
+			}
+				se(k == 1){
+					u.aguarde(800)
+					entrada_chefe(1, 400)
+					entrada_chefe(2, 800)
+				}
+				senao se(k == 2){
+					entrada_chefe(1, 400)
+					entrada_chefe(3, 800)
+					entrada_chefe(1, 400)
+					entrada_chefe(4, 800)
+					entrada_chefe(5, 800)
+				}
+				desenha_matriz()
+				se(k == 2 ou k == 3){
+					u.aguarde(1800)
+				}senao{
+					u.aguarde(800)
+				}
+		}
+	}
+
+	funcao entrada_chefe(inteiro sprite, real tempoSprite){
+		se(sprite == 1){
+		
+			limpa()
+		escreva("█▓▓    ░▓█████████████████████████████▓   ▓███████████▓▓▓▓▓▓▓▓▓▓▓▓  ▓▓▓▓▓▓▓▓▓████████░      ▒▓▓▓█████\n")
+		escreva("██████▓▒   ██████████████████████████████▓   █████████▓▓▓▓▓▒▓▓▓▓▓▓ ▓▓▓▓▓▓▓▓▓▓██▓███░     ▒▓▓▓▓███████\n")
+		escreva("████████████ ▓██████████████████████████████ ▓████████▓▓▓▓▓░▒▓▓▓▓▓▓ ▓▓▓▓████▓▒         ▒▓▓▓██████████\n")
+		escreva("███████████████▓▓ ▓██████████▒░█▓███████████  ████████▓░▓▓ ░▓▓▓▓▓▓ ▓▓▓▓█▓▓▓  ░▒▓▓▓▓▓▓▓▓▓█████████████\n")
+		escreva("████████████████████▒░▓████████▓  ▒██████████▓ ███████▓▓▒▓  ▓▓▓▓ ▒▓▓▓▓▓▓▓  ▒▓▓▓▓█████████████████████\n")
+		escreva("██████████████████████████████████▓     ██████   ▒    ▓░   ▓▒▓ ▓▓▓▓▓▓▓▓   ▓▓▓▓▓▓▓▓▓▓██▓▓█████████████\n")
+		escreva("████████████████████████████████████████  ██▒ █████████▒▓      ▓▓▓▓▓▓   ░▓▓▓▓▓▓▓▓▓▓▓▓▓██████████████▓\n")
+		escreva("  ▓▓▓▓███████████████████████████████████▓░  ███▓ ███▓█████▓   ▓▓▒  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓████▓▓▓▓   ▓▓▓▓\n")
+		escreva("                ▒▓████████████████████▓▒▒██  ████ ███▒▓███▒███     ▓▒▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓█▓▓█▓▓▓████████\n")
+		escreva("                     ░████████████████████▓  ███ ▒███ ▓██ ▒███░  ░▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓███████████████\n")
+		escreva("                        ░██████████▒  ▓██▒ ░░█░   ▒█▓ ███ ██▓    ▒▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓███████████████\n")
+		escreva("█████████████████████▓             ░▓█    ▒████ ██░  ▓██ ▒██ █      ░▓▓▓▓▒▒▓▓▓██▓▓▓▓█████████████████\n")
+		escreva("█████████████████████████▓ ▒█████████████ ▒███▓▓   ▓        █    ░▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓██████████████████\n")
+		escreva("██████████████████████████████████████████▒  ▓▓██████ ██████    ░   ░▒▓▓▓▓▓▓▓▓▓▓▓▓▓█▓████████████████\n")
+		escreva("████████████████████████████████████  ▓██▓███▓   ▓▓███▓▓       ░▒▒▓▓▓▓  ▓▓▓▓▓▓▓▓▓▓▓██████████████████\n")
+		escreva("███████████████████▓▓ ▒████████████████████▓█  █▓▓▒        ░   ░▒▒▓▓▓▓▓▓   ▓▓▓▓▓▓▓▓▓▒ ▒▓█████████████\n")
+		escreva("████████████▓▓ ░▓▓▓██████████████████████▓▒  ░████████▒▒░ ▒▒▒▒   ▒▓▓▓▓▓▓▓▓▒                 ░█▓██████\n")
+		escreva("███████▓▒    ▓▓▓█████████████████████▓▓   ▓▓▓█▓███████▒▒▒ ▒▒▒▒▒▓  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓█▓          ▓▓█\n")
+		escreva("█▒       ▓▓█████████████████████▓▓█▓██░ █████▓████▓███▓▓▒▒░░▒▒▒▓▓▒  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓██▓█▓          \n")
+		escreva("    ▓▓▓▓▓████████████████████████████▓  █████████▓████▓▓▓▒ ▒▓▓▓▓▓▓▓▓▓▓▓ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓████████▓      \n")
+		escreva("▓▓▓▓█████████████████████████████████  ▓████████▓█████▓▓▓▓▓░▓▓▓▓▓▓▓▓▓▓▓▓ ▓▓▓▓▓▓▓▓▓▓▓▓▓███████████▓▒  ")
+		u.aguarde(tempoSprite / 1.5)
+		
+		}
+		
+		senao se(sprite == 2){
+			limpa()
+		escreva("█▓▓    ░▓█████████████████████████████▓   ▓███████████▓▓▓▓▓▓▓▓▓▓▓▓  ▓▓▓▓▓▓▓▓▓████████░      ▒▓▓▓█████\n")
+		escreva("██████▓▒   ██████████████████████████████▓   █████████▓▓▓▓▓▒▓▓▓▓▓▓ ▓▓▓▓▓▓▓▓▓▓██▓███░     ▒▓▓▓▓███████\n")
+		escreva("████████████ ▓██████████████████████████████ ▓████████▓▓▓▓▓░▒▓▓▓▓▓▓ ▓▓▓▓████▓▒         ▒▓▓▓██████████\n")
+		escreva("███████████████▓▓ ▓██████████▒░█▓███████████  ████████▓░▓▓ ░▓▓▓▓▓▓ ▓▓▓▓█▓▓▓  ░▒▓▓▓▓▓▓▓▓▓█████████████\n")
+		escreva("████████████████████▒░▓████████▓  ▒██████████▓ ███████▓▓▒▓  ▓▓▓▓ ▒▓▓▓▓▓▓▓  ▒▓▓▓▓█████████████████████\n")
+		escreva("██████████████████████████████████▓     ██████   ▒    ▓░   ▓▒▓ ▓▓▓▓▓▓▓▓   ▓▓▓▓▓▓▓▓▓▓██▓▓█████████████\n")
+		escreva("████████████████████████████████████████  ██▒                  ▓▓▓▓▓▓   ░▓▓▓▓▓▓▓▓▓▓▓▓▓██████████████▓\n")
+		escreva("  ▓▓▓▓███████████████████████████████████▓░                    ▓▓▒  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓████▓▓▓▓   ▓▓▓▓\n")
+		escreva("                ▒▓████████████████████▓▒▒██                        ▓▒▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓█▓▓█▓▓▓████████\n")
+		escreva("                     ░████████████████████▓                      ░▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓███████████████\n")
+		escreva("                        ░██████████▒  ▓██▒                       ▒▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓███████████████\n")
+		escreva("█████████████████████▓             ░▓█                              ░▓▓▓▓▒▒▓▓▓██▓▓▓▓█████████████████\n")
+		escreva("█████████████████████████▓ ▒█████████████                        ░▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓██████████████████\n")
+		escreva("██████████████████████████████████████████▒                     ░   ░▒▓▓▓▓▓▓▓▓▓▓▓▓▓█▓████████████████\n")
+		escreva("████████████████████████████████████  ▓██▓███▓                 ░▒▒▓▓▓▓  ▓▓▓▓▓▓▓▓▓▓▓██████████████████\n")
+		escreva("███████████████████▓▓ ▒████████████████████▓█  █▓▓▒        ░   ░▒▒▓▓▓▓▓▓   ▓▓▓▓▓▓▓▓▓▒ ▒▓█████████████\n")
+		escreva("████████████▓▓ ░▓▓▓██████████████████████▓▒  ░████████▒▒░ ▒▒▒▒   ▒▓▓▓▓▓▓▓▓▒                 ░█▓██████\n")
+		escreva("███████▓▒    ▓▓▓█████████████████████▓▓   ▓▓▓█▓███████▒▒▒ ▒▒▒▒▒▓  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓█▓          ▓▓█\n")
+		escreva("█▒       ▓▓█████████████████████▓▓█▓██░ █████▓████▓███▓▓▒▒░░▒▒▒▓▓▒  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓██▓█▓          \n")
+		escreva("    ▓▓▓▓▓████████████████████████████▓  █████████▓████▓▓▓▒ ▒▓▓▓▓▓▓▓▓▓▓▓ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓████████▓      \n")
+		escreva("▓▓▓▓█████████████████████████████████  ▓████████▓█████▓▓▓▓▓░▓▓▓▓▓▓▓▓▓▓▓▓ ▓▓▓▓▓▓▓▓▓▓▓▓▓███████████▓▒  ")
+		u.aguarde(tempoSprite)
+		
+		}
+		
+		senao se(sprite == 3){
+			limpa()
+		escreva("█▓▓    ░▓█████████████████████████████▓   ▓███████████▓▓▓▓▓▓▓▓▓▓▓▓  ▓▓▓▓▓▓▓▓▓████████░      ▒▓▓▓█████\n")
+		escreva("██████▓▒   ███████████████████████████▓▒▒    ███▓▒▒███▓▓▓▓  ▓▓▓▓▓▓ ▓▓▓▓▓▓▓▓▓▓██▓███░     ▒▓▓▓▓███████\n")
+		escreva("████████████ ▓███████████████████████████           ██▓▓▓   ▒▓▓▓▓▓▓ ▓▓▓▓████▓▒         ▒▓▓▓██████████\n")
+		escreva("███████████████▓▓ ▓██████████▒░█▓███▓▒▒                             ▓▓▓█▓▓▓  ░▒▓▓▓▓▓▓▓▓▓█████████████\n")
+		escreva("████████████████████▒░▓████████▓  ▒██                                      ▒▓▓▓▓█████████████████████\n")
+		escreva("██████████████████████████████████▓                                       ▓▓▓▓▓▓▓▓▓▓██▓▓█████████████\n")
+		escreva("█████████████████████████████████████                                   ░▓▓▓▓▓▓▓▓▓▓▓▓▓██████████████▓\n")
+		escreva("  ▓▓▓▓██████████████████████████████                                  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓████▓▓▓▓   ▓▓▓▓\n")
+		escreva("                ▒▓████████████████████▓▒▒                              ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓█▓▓█▓▓▓████████\n")
+		escreva("                     ░██████████████▓▒▒                                 ▓▓▓▓▓▓▓▓▓▓▓▓▓▓███████████████\n")
+		escreva("                        ░██████████▒  ▓██▒                                  ▓▓▓▓▓▓▓▓▓▓███████████████\n")
+		escreva("█████████████████████▓             ░▓█                                   ▒▒▓▓▓██▓▓▓▓█████████████████\n")
+		escreva("█████████████████████████▓ ▒████████                                        ▓▓▓▓▓▓▓██████████████████\n")
+		escreva("██████████████████████████████████████▓▒▒ ▒                            ▓▓▓▓▓▓▓▓▓▓▓▓█▓████████████████\n")
+		escreva("████████████████████████████████████  ▓██▓███▓                           ▓▓▓▓▓▓▓▓▓▓██████████████████\n")
+		escreva("███████████████████▓▓ ▒████████████████████▓█                              ▓▓▓▓▓▓▓▓▓▒ ▒▓█████████████\n")
+		escreva("████████████▓▓ ░▓▓▓██████████████████████▓▒  ░███         ▒▒▒▒   ▒▓▓▓▓▓▓▓▓▒                 ░█▓██████\n")
+		escreva("███████▓▒    ▓▓▓█████████████████████▓▓   ▓▓▓█▓███████▒▒▒ ▒▒▒▒▒▓  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓█▓          ▓▓█\n")
+		escreva("█▒       ▓▓█████████████████████▓▓█▓██░ █████▓████▓███▓▓▒▒░░▒▒▒▓▓▒  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓██▓█▓          \n")
+		escreva("    ▓▓▓▓▓████████████████████████████▓  █████████▓████▓▓▓▒ ▒▓▓▓▓▓▓▓▓▓▓▓ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓████████▓      \n")
+		escreva("▓▓▓▓█████████████████████████████████  ▓████████▓█████▓▓▓▓▓░▓▓▓▓▓▓▓▓▓▓▓▓ ▓▓▓▓▓▓▓▓▓▓▓▓▓███████████▓▒  ")
+		u.aguarde(tempoSprite)
+		}
+		
+		senao se(sprite == 4){
+			limpa()
+		escreva("█▓▓    ░▓█████████████████████████████▓   ▓███████████▓▓▓▓▓▓▓▓▓▓▓▓  ▓▓▓▓▓▓▓▓▓████████░      ▒▓▓▓█████\n")
+		escreva("██████▓▒   ███████████████████████████▓▒▒    ███▓▒▒███      ▓▓▓▓▓▓ ▓▓▓▓▓▓▓▓▓▓██▓███░     ▒▓▓▓▓███████\n")
+		escreva("████████████ ▓███████████████████████████                   ▒▓▓▓▓▓▓ ▓▓▓▓████▓▒         ▒▓▓▓██████████\n")
+		escreva("███████████████▓▓ ▓██████████▒░█▓███▓▒▒                                      ░▒▓▓▓▓▓▓▓▓▓█████████████\n")
+		escreva("████████████████████▒░▓████████▓                                           ▒▓▓▓▓█████████████████████\n")
+		escreva("███████████████████████████████                                              ▓▓▓▓▓▓▓██▓▓█████████████\n")
+		escreva("████████████████████████████████                                             ▓▓▓▓▓▓▓▓▓██████████████▓\n")
+		escreva("  ▓▓▓▓███████████████████████████                                             ▓▓▓▓▓▓▓▓████▓▓▓▓   ▓▓▓▓\n")
+		escreva("                ▒▓████████████████                                         ▓▓▓▓▓▓▓▓▓▓▓█▓▓█▓▓▓████████\n")
+		escreva("                     ░████████████                                      ▓▓▓▓▓▓▓▓▓▓▓▓▓▓███████████████\n")
+		escreva("                        ░████████                                           ▓▓▓▓▓▓▓▓▓▓███████████████\n")
+		escreva("█████████████████████▓                                                   ▒▒▓▓▓██▓▓▓▓█████████████████\n")
+		escreva("█████████████████████████▓ ▒████████                                        ▓▓▓▓▓▓▓██████████████████\n")
+		escreva("█████████████████████████████████                                      ▓▓▓▓▓▓▓▓▓▓▓▓█▓████████████████\n")
+		escreva("█████████████████████████████████                                        ▓▓▓▓▓▓▓▓▓▓██████████████████\n")
+		escreva("███████████████████▓▓ ▒███████████                                         ▓▓▓▓▓▓▓▓▓▒ ▒▓█████████████\n")
+		escreva("████████████▓▓ ░▓▓▓███████████████                               ▒▓▓▓▓▓▓▓▓▒                 ░█▓██████\n")
+		escreva("███████▓▒    ▓▓▓█████████████████████▓▓   ▓▓▓█▓█               ▓  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓█▓          ▓▓█\n")
+		escreva("█▒       ▓▓█████████████████████▓▓█▓██░ █████▓████▓███▓▓▒▒░░▒▒▒▓▓▒  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓██▓█▓          \n")
+		escreva("    ▓▓▓▓▓████████████████████████████▓  █████████▓████▓▓▓▒ ▒▓▓▓▓▓▓▓▓▓▓▓ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓████████▓      \n")
+		escreva("▓▓▓▓█████████████████████████████████  ▓████████▓█████▓▓▓▓▓░▓▓▓▓▓▓▓▓▓▓▓▓ ▓▓▓▓▓▓▓▓▓▓▓▓▓███████████▓▒  ")
+		u.aguarde(tempoSprite)
+		}
+		
+		senao se(sprite == 5){
+			limpa()
+		escreva("█▓▓    ░▓█████████████████████████████▓   ▓███████████▓▓▓▓▓▓▓▓▓▓▓▓  ▓▓▓▓▓▓▓▓▓████████░      ▒▓▓▓█████\n")
+		escreva("██████▓▒   ███████████████████████████▓▒▒    ███▓▒▒███      ▓▓▓▓▓▓ ▓▓▓▓▓▓▓▓▓▓██▓███░     ▒▓▓▓▓███████\n")
+		escreva("████████████ ▓███████████████████████████                   ▒▓▓▓▓▓▓ ▓▓▓▓████▓▒         ▒▓▓▓██████████\n")
+		escreva("███████████████▓▓ ▓██████████▒░█▓███▓▒▒           ▒▓▓░   ▓▒░░▓▓▓▒░           ░▒▓▓▓▓▓▓▓▓▓█████████████\n")
+		escreva("████████████████████▒░▓████████▓     ▒█░  ░▓▒░▒████████▓▓██▓▒              ▒▓▓▓▓█████████████████████\n")
+		escreva("███████████████████████████████    ▒▒▓░     ▓▓▓▓▓▓▓▓▓▓██▓▓▓▓█▓ ▓▓   ▒▓███▒   ▓▓▓▓▓▓▓██▓▓█████████████\n")
+		escreva("████████████████████████████████      ░▒▓▓▓██▓▓▓▓▓▓▓▓▓▓█▓▓▓▓▓██▒░▒▒▒▓▓░ ░▓   ▓▓▓▓▓▓▓▓▓██████████████▓\n")
+		escreva("  ▓▓▓▓███████████████████████████        ░██▓▓▓▓▓▓▓▓▓▒▒▒▓▓▓▓▓▓███▒            ▓▓▓▓▓▓▓▓████▓▓▓▓   ▓▓▓▓\n")
+		escreva("                ▒▓████████████████     ░ ▒██▓▓▓▓▓▒▒▒▒▒▒▒▒▓▓▓▓▓▓██░         ▓▓▓▓▓▓▓▓▓▓▓█▓▓█▓▓▓████████\n")
+		escreva("                     ░████████████    ▓▓▓▓▓▓▓▒▓▓▓▒▒▒▒▒▒▒▒▒▓▓▓▓▓▓█▓▒░▒▓░ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓███████████████\n")
+		escreva("                        ░████████    ▓▓▓▓███▓▓▓▓▓▒▒▒▒▒▒▒▒▒▓▓▓▓▓██▒░▒░▓░     ▓▓▓▓▓▓▓▓▓▓███████████████\n")
+		escreva("█████████████████████▓                   ███▓▓▓▓▓▒▒▒▒▒▒▒▓▓▓▓▓▓███░░▓░    ▒▒▓▓▓██▓▓▓▓█████████████████\n")
+		escreva("█████████████████████████▓ ▒████████     ▓██▓▓▓▓▓▓▓▒▒▒▓▓▓▓▓▓▓▓██▒           ▓▓▓▓▓▓▓██████████████████\n")
+		escreva("█████████████████████████████████     ░▓▓▓▓██▓▓▓▓▓▓▓▓▓▓▓█▓▓████▓▒░     ▓▓▓▓▓▓▓▓▓▓▓▓█▓████████████████\n")
+		escreva("█████████████████████████████████ ▓█▓▓▓     ██▓▓▓▓▓▓▓▓▓█▓▓█   ▒▒░        ▓▓▓▓▓▓▓▓▓▓██████████████████\n")
+		escreva("███████████████████▓▓ ▒███████████           ███▓██  ██▓█▓▓▓█              ▓▓▓▓▓▓▓▓▓▒ ▒▓█████████████\n")
+		escreva("████████████▓▓ ░▓▓▓███████████████             █▓  █▓      ▓▓█   ▒▓▓▓▓▓▓▓▓▒                 ░█▓██████\n")
+		escreva("███████▓▒    ▓▓▓█████████████████████▓▓   ▓▓▓█▓█               ▓  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓█▓          ▓▓█\n")
+		escreva("█▒       ▓▓█████████████████████▓▓█▓██░ █████▓████▓███▓▓▒▒░░▒▒▒▓▓▒  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓██▓█▓          \n")
+		escreva("    ▓▓▓▓▓████████████████████████████▓  █████████▓████▓▓▓▒ ▒▓▓▓▓▓▓▓▓▓▓▓ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓████████▓      \n")
+		escreva("▓▓▓▓█████████████████████████████████  ▓████████▓█████▓▓▓▓▓░▓▓▓▓▓▓▓▓▓▓▓▓ ▓▓▓▓▓▓▓▓▓▓▓▓▓███████████▓▒  ")
+		}
+		u.aguarde(tempoSprite)
 	}
 }
